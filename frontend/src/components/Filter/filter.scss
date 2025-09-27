@@ -1,0 +1,85 @@
+.refinement-bar {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    @media (max-width: 768px) {
+        display: none;
+        position: fixed;
+        z-index: 2021;
+        height: 100%;
+        background: white;
+        &.active {
+            display: block;
+            position: fixed;
+            top: 0;
+            overflow: auto;
+        }
+    }
+
+    .refinement-header {
+        button.close {
+            background: transparent;
+            border: none;
+            color: #fda085;
+
+            span {
+                font-size: 13px;
+            }
+        }
+    }
+}
+
+.accordion {
+    border-bottom: 1px solid #eaeaea;
+    .accordion-button {
+        background-color: transparent !important;
+        box-shadow: none !important;
+    }
+
+    .accordion-item {
+        border: none;
+    }
+
+    .accordion-header {
+        border-top: 1px solid #eaeaea;
+    }
+
+    .accordion-body {
+        padding-left: 0;
+        padding-right: 0;
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+            li {
+                &.type-list-item {
+                    font-size: 12px;
+                    font-weight: 600;
+                    line-height: 10px;
+                }
+                a {
+                    color: black;
+                    align-items: center;
+                    &.refinement-value {
+                        background: #f2f2f2;
+                        padding: 5px;
+                        border-radius: 5px;
+                        width: 100px;
+                        display: flex;
+                    }
+                }
+                .card-body {
+                    height: 70px;
+                    padding: 5px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    text-align: center;
+                    cursor: pointer;
+
+                    &.active {
+                        border: solid;
+                    }
+                }
+            }
+        }
+    }
+}

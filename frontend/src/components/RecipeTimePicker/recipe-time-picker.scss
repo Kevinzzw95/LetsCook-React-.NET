@@ -1,0 +1,34 @@
+.time-picker-wrapper {
+    border-radius: 5px;
+    height: 100px;
+    width: 100%;
+    background: white;
+    border: solid var(--bs-border-width) var(--bs-border-color);
+    overflow: hidden;
+    ul {
+        height: 100%;
+        overflow-y: scroll;
+        scrollbar-color: #fda085 #F5F5F5;
+        li {
+            cursor: pointer;
+            padding: 4px;
+            width: 100%;
+            border-radius: 3px;
+            text-align: center;
+            &.selected {
+                background: #fda085;
+            }
+            &:hover {
+                background: var(--contrast-color);
+            }
+        }
+    }
+}
+
+button.btn-timepicker {
+    background: white;
+    border: solid var(--bs-border-width) var(--bs-border-color);
+    &:hover {
+        background: white;
+    }
+}

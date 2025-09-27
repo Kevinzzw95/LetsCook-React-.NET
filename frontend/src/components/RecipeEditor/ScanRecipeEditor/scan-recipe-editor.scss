@@ -1,0 +1,12 @@
+.background-spinner {
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    z-index: 999;
+    background-color: transparentize(gray, 0.5); 
+    .spinner-border {
+        color: #fda085;
+    }
+}

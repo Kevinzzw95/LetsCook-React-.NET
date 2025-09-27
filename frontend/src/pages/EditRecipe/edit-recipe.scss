@@ -1,0 +1,69 @@
+.newrecipe-tabs {
+    font-weight: 700;
+    background: #F5F5F5;
+    border-radius: 10px;
+    box-shadow: rgba(50, 50, 93, 0.25) 0px 10px 100px -12px inset, rgba(0, 0, 0, 0.3) 0px 10px 20px -10px inset;
+    .nav-pills .nav-link {
+        color: black;
+        &.active {
+            color: var(--contrast-color);
+            background: var(--accent-color);
+        }
+
+        @media (max-width: 768px) {
+            font-size: 13px;
+            padding-inline: 8px;
+        }
+    }
+}
+
+.newrecipe-content {
+    background: #F5F5F5;
+    border-radius: 10px;
+    box-shadow: rgba(50, 50, 83, 0.25) 0px 20px 40px -12px inset, rgba(0, 0, 0, 0.3) 0px 10px 10px -10px inset;
+    min-height: 60vh;
+}
+
+.newrecipe-heading {
+    position: relative;
+    .btn-newrecipe-submit {
+        position: absolute;
+        right: 0;
+        top: 0;
+        color: #fda085;
+        font-weight: 800;
+        font-size: 18px;
+        @media (max-width: 768px) {
+            font-size: 15px;
+        }
+    }
+}
+
+.newrecipe-container {
+    min-height: 70vh;
+}
+
+.recipe-confirmation-modal {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 100;
+    .recipe-confirmation-modal-content {
+        background: white;
+        padding: 1rem;
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        max-height: 80%;
+        width: 90%;
+        display: flex;
+        overflow: hidden;
+        flex-direction: column;
+        .recipe-confirmation-modal-body {
+            overflow: auto;
+        }
+    }
+}

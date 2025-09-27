@@ -1,0 +1,46 @@
+.input-group {
+    position: relative;
+    .ingredient-input {
+        border-radius: 5px !important;
+        padding-right: 50px;
+        border: inherit;
+        border-right: none;
+    }
+}
+
+.add-ingredient-wrapper {
+    position: absolute;
+    right: 0;
+}
+
+button.btn-add-ingredient {
+    border-radius: 5px;
+    font-size: 12px;
+    background: var(--accent-color);
+    border: none;
+    z-index: 100 !important;
+}
+
+.added-ingredient-item {
+    background: #fda085;
+    border: none;
+    border-radius: 5px;
+}
+
+.remove-ingredient-modal,
+.edit-ingredient-modal {
+    .modal-dialog {
+        max-width: 500px;
+        .modal-content {
+            width: 70%;
+            .edit-ingredient-input {
+                background: white;
+                color: black;
+                width: 90%;
+                border-radius: 5px;
+                border: #fda085 solid 1px;
+                padding: 5px;
+            }
+        }
+    }
+}

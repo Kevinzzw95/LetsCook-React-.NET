@@ -1,0 +1,45 @@
+/* src/App.css */
+.login-form-container {
+    width: 400px;
+    margin: 50px auto;
+    padding: 20px;
+    @media (max-width: 768px) {
+        margin: 0;
+    }
+}
+
+h2 {
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 15px;
+    input {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        border: none;
+        border-radius: 5px;
+        background: gainsboro;
+    }
+}
+
+label {
+    display: block;
+    font-weight: bold;
+}
+
+button.btn.submit-login {
+    width: 100%;
+    padding: 10px;
+    border: solid #fda085;
+    color: #fda085;
+    margin-top: 15px;
+}
+  
+.error-message {
+    color: red;
+    font-size: 14px;
+    margin-top: 10px;
+}
+  

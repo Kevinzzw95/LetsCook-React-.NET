@@ -1,0 +1,103 @@
+import './overview-editor.scss'
+import { CATEGORIES } from '../../../constants';
+import RecipeTimePicker from '../../RecipeTimePicker';
+import { useEffect, useState } from 'react';
+import { useFormContext } from 'react-hook-form';
+import { ErrorMessage } from "@hookform/error-message";
+import { importedRecipe } from '../../../types/recipe';
+
+type Props = {
+    currRecipe: importedRecipe | undefined,
+}
+
+const OverviewEditor = ({currRecipe}: Props) => {
+    const { register, setValue, formState: { errors }} = useFormContext();
+
+    const [preparationTime, setPreparationTime] = useState<number>(0);
+    const [cookingTime, setCookingTime] = useState<number>(0);
+
+    const updatePreparationTime = (hour: string, min: string) => {
+        setPreparationTime(Number(hour) * 60 + Number(min));
+    }
+
+    const updateCookingTime = (hour: string, min: string) => {
+        setCookingTime(Number(hour) * 60 + Number(min));
+    }
+
+    useEffect(() => {
+        setValue("title", currRecipe?.title);
+        setValue("servings", currRecipe?.servings);
+    }, [currRecipe?.title, currRecipe?.servings]);
+
+    useEffect(() => {
+        setValue("servings", 1);
+    }, []);
+
+    return (
+        <>
+            <div className="">
+                <label htmlFor="recipeTitle" className="newrecipe-form-label py-2">Title</label>
+                <input {...register("title")} 
+                    type="text" 
+                    className="form-control" 
+                    id="recipeTitle" 
+                    aria-describedby="recipeTitle"
+                    onChange={(e) => setValue("title", e.target.value)} />
+                <ErrorMessage
+                    errors={errors}
+                    name="title"
+                    render={({ message }) => <p className='error-input create-recipe-error'>{message}</p>}
+                />
+            </div>
+            <div className='row'>
+                {
+                    CATEGORIES && CATEGORIES.map((category) => 
+                        <div className='col-12 col-md-6' key={category.name}>
+                            <label htmlFor={category.name} className="newrecipe-form-label py-2">{ category.name }(Optional)</label>
+                            <select {...register(category.name)} id={category.name} className="form-select" defaultValue={"None"} aria-label="Default select example">
+                                <option value="None" disabled>Choose one {category.name}</option>
+                                {
+                                    category.values.length && category.values.map((value) => 
+                                        <option key={value}>{ value }</option>
+                                    )
+                                }
+                                <option value="Customize">Customize</option>
+                            </select>
+                        </div>
+                    )
+                }
+
+                {/* <div className="col-12 col-md-6">
+                    <label htmlFor="recipeResource" className="newrecipe-form-label py-2">Resource(Optional)</label>
+                    <input {...register("sourceUrl")} type="text" className="form-control" id="recipeResource" aria-describedby="recipeResource" />
+                </div> */}
+                <div className="col-12 col-md-6">
+                    <label htmlFor="recipeServings" className="newrecipe-form-label py-2">Servings</label>
+                    <input 
+                        {...register("servings")}
+                        type="number" 
+                        min={0} 
+                        className="form-control" 
+                        id="recipeServings" 
+                        aria-describedby="recipeServings" 
+                        onChange={(e) => setValue("servings", Number(e.target.value))} />
+                </div>
+            </div>
+            <div className='row'>
+                <input {...register("preparationMinutes")} hidden value={preparationTime}/>
+                <input {...register("cookingMinutes")} hidden value={cookingTime}/>
+                <div className="col-12 col-md-6">
+                    <label htmlFor="recipePreTime" className="newrecipe-form-label py-2">Preparation Time</label>
+                    <RecipeTimePicker onSelectTime={updatePreparationTime} type='preparationTime'/>
+                </div>
+                <div className="col-12 col-md-6">
+                    <label htmlFor="recipeCookingTime" className="newrecipe-form-label py-2">Cooking Time</label>
+                    <RecipeTimePicker onSelectTime={updateCookingTime} type='cookingTime'/>
+                </div>
+            </div>
+            
+        </>
+    )
+}
+
+export default OverviewEditor;

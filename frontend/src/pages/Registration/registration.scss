@@ -1,0 +1,20 @@
+
+.registration-container {
+    height: 60vh;
+    .registration-background {
+        background: var(--accent-color);
+        border-radius: 0 30% 30% 0;
+        height: 60vh;
+        @media (max-width: 768px) {
+            border-radius: 0% 0% 30% 30%;
+            height: 20vh;
+            h1 {
+                color: white;
+            }
+        }
+    }
+    .registration-content {
+        height: 60vh;
+        background: white;
+    }
+}

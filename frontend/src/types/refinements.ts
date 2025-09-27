@@ -1,0 +1,1 @@
+export interface Refinements { [key: string]: string[]; }

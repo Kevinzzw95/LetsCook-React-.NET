@@ -1,0 +1,49 @@
+.add-step-wrapper {
+    position: absolute;
+    right: 5px;
+    bottom: 10px;
+    .btn.btn-add-step {
+        z-index: 100 !important;
+    }
+}
+
+.step-item {
+    background: #fda085;
+    border: none;
+    border-radius: 5px;
+}
+
+.remove-step-modal {
+    .modal-dialog {
+        max-width: 500px;
+        .modal-content {
+            width: 70%;
+            .edit-step-input {
+                background: white;
+                color: black;
+                width: 90%;
+                border-radius: 5px;
+                border: #fda085 solid 1px;
+                padding: 5px;
+            }
+        }
+    }
+}
+
+.edit-step-modal {
+    .modal-dialog {
+        max-width: 500px;
+        .modal-content {
+            width: 100%;
+            .edit-step-input {
+                background: white;
+                color: black;
+                width: 90%;
+                border-radius: 5px;
+                border: #fda085 solid 1px;
+                padding: 5px;
+                min-height: 100px;
+            }
+        }
+    }
+}

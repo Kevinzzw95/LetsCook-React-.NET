@@ -1,0 +1,30 @@
+.add-pictures {
+    border: dashed #fda085 3px;
+    border-radius: 10px;
+    width: 15vw;
+    height: 220px;
+    color: #fda085;
+
+    .add-icon-wrapper {
+        cursor: pointer;
+        .add-icon {
+            width: 30px;
+            height: 30px;
+            color: #fda085;
+        }
+
+        p {
+            font-weight: 600;
+        }
+    }
+    
+}
+
+.selected-image {
+    width: 15vw;
+    height: 220px;
+    color: #fda085;
+    .delete-image {
+        height: 2rem;
+    }
+}

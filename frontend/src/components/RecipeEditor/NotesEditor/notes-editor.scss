@@ -1,0 +1,49 @@
+.add-notes-wrapper {
+    position: absolute;
+    right: 5px;
+    bottom: 10px;
+    .btn.btn-add-notes {
+        z-index: 100 !important;
+    }
+}
+
+.notes-item {
+    background: #fda085;
+    border: none;
+    border-radius: 5px;
+}
+
+.remove-notes-modal {
+    .modal-dialog {
+        max-width: 500px;
+        .modal-content {
+            width: 70%;
+            .edit-notes-input {
+                background: white;
+                color: black;
+                width: 90%;
+                border-radius: 5px;
+                border: #fda085 solid 1px;
+                padding: 5px;
+            }
+        }
+    }
+}
+
+.edit-notes-modal {
+    .modal-dialog {
+        max-width: 500px;
+        .modal-content {
+            width: 100%;
+            .edit-notes-input {
+                background: white;
+                color: black;
+                width: 90%;
+                border-radius: 5px;
+                border: #fda085 solid 1px;
+                padding: 5px;
+                min-height: 100px;
+            }
+        }
+    }
+}
