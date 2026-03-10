@@ -1,3 +1,4 @@
+import { ChefHat } from 'lucide-react';
 import LoginForm from '../../components/LoginForm';
 import './login.scss'
 
@@ -5,17 +6,20 @@ const Login = () => {
 
     return (
         <>
-            <div className='container login-container h-100'>
-                <div className='row'>
-                    <div className='col-md-6 login-background d-flex align-items-end justify-content-center'>
-                        <h1 className='d-md-none p-2'>Login</h1>
+            <div className='container-fluid login-container d-flex justify-content-center'>
+                <div className='card-glass d-flex p-5 flex-column w-100'>
+                    {/* Header / Logo */}
+                    <div className="text-center mb-5">
+                        <div className="d-inline-flex align-items-center justify-content-center rounded-circle bg-white shadow-sm mb-3" style={{ width: '80px', height: '80px' }}>
+                            <div className="icon-circle bg-warning text-white rounded-circle" style={{ width: '64px', height: '64px', background: 'linear-gradient(to top right, #fb923c, #fcd34d)' }}>
+                                <ChefHat size={32} />
+                            </div>
+                        </div>
+                        <h1 className="h3 fw-bold text-dark mb-1">Welcome Back!</h1>
+                        <p className="text-secondary">Sign in to SunnySide Kitchen</p>
                     </div>
-                    <div className='d-flex col-md-6 login-content'>
-                        <LoginForm />
-                    </div>
+                    <LoginForm />
                 </div>
-                
-
             </div>
         </>
     )

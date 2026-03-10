@@ -13,8 +13,8 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace API.Migrations
 {
     [DbContext(typeof(RecipeContext))]
-    [Migration("20250921200755_IndentityAdded")]
-    partial class IndentityAdded
+    [Migration("20260308050415_updateIngredientDto")]
+    partial class updateIngredientDto
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -122,6 +122,60 @@ namespace API.Migrations
                     b.ToTable("Recipes");
                 });
 
+            modelBuilder.Entity("API.Entity.ShoppingItem", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
+
+                    b.Property<string>("Amount")
+                        .HasColumnType("text");
+
+                    b.Property<long?>("IngredientId")
+                        .HasColumnType("bigint");
+
+                    b.Property<bool>("IsBought")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("ShoppingListId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Store")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Unit")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("IngredientId");
+
+                    b.HasIndex("ShoppingListId");
+
+                    b.ToTable("ShoppingItems");
+                });
+
+            modelBuilder.Entity("API.Entity.ShoppingList", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClientSecret")
+                        .HasColumnType("text");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ShoppingLists");
+                });
+
             modelBuilder.Entity("API.Entity.User", b =>
                 {
                     b.Property<string>("Id")
@@ -163,6 +217,12 @@ namespace API.Migrations
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("RefreshToken")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("RefreshTokenExpiryTime")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
@@ -372,6 +432,23 @@ namespace API.Migrations
                     b.Navigation("Steps");
                 });
 
+            modelBuilder.Entity("API.Entity.ShoppingItem", b =>
+                {
+                    b.HasOne("API.Entity.Ingredient", "Ingredient")
+                        .WithMany()
+                        .HasForeignKey("IngredientId");
+
+                    b.HasOne("API.Entity.ShoppingList", "ShoppingList")
+                        .WithMany("Items")
+                        .HasForeignKey("ShoppingListId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Ingredient");
+
+                    b.Navigation("ShoppingList");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -426,6 +503,11 @@ namespace API.Migrations
             modelBuilder.Entity("API.Entity.Recipe", b =>
                 {
                     b.Navigation("Instructions");
+                });
+
+            modelBuilder.Entity("API.Entity.ShoppingList", b =>
+                {
+                    b.Navigation("Items");
                 });
 #pragma warning restore 612, 618
         }

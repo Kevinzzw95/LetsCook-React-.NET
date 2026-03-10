@@ -4,25 +4,29 @@ import { RootState } from "../store/store";
 interface authSliceState {
     user: string | null;
     token: string | null;
-    refresh: string | null;
+    refreshToken: string|null;
 }
 
-const initialState: authSliceState = { user: null, token: null, refresh: null };
+const initialState: authSliceState = { user: null, token: null, refreshToken: null };
 
 const authSlice = createSlice({
     name: 'auth',
     initialState: initialState,
     reducers: {
         setCredentials: (state, action: PayloadAction<authSliceState>) => {
-            const{ user, token, refresh } = action.payload;
+            const{ user, token, refreshToken } = action.payload;
             state.user = user;
             state.token = token;
-            state.refresh = refresh;
+            state.refreshToken = refreshToken;
+
+            localStorage.setItem('user', JSON.stringify(action.payload));
         },
         logOut: (state) => {
-            state.refresh = null;
-            state.user = null;
+            state.user = null; 
             state.token = null;
+            state.refreshToken = null;
+
+            localStorage.removeItem('user');
         }
     }
 })
@@ -33,4 +37,3 @@ export default authSlice.reducer;
 
 export const selectCurrentUser = (state: RootState) => state.auth.user;
 export const selectCurrentToken = (state: RootState) => state.auth.token;
-export const selectCurrentRefresh = (state: RootState) => state.auth.refresh;

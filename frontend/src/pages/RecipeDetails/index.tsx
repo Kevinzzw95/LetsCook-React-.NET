@@ -3,11 +3,13 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import './recipe-details.scss'
 import { useParams } from 'react-router';
 import { faClock, faStar } from '@fortawesome/free-regular-svg-icons';
-import { faHeart, faComment, faFire, faEgg, faBowlRice, faDroplet } from '@fortawesome/free-solid-svg-icons';
+import { faHeart, faComment, faList, faFire, faEgg, faBowlRice, faDroplet } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useState } from 'react';
 import { instruction } from '../../types/instruction';
 import agent from '../../redux/api/agent';
-import { useGetRecipeQuery } from '../../redux/recipe/recipeApiSlice';
+import { useAddItemsToShoppingListMutation, useGetRecipeQuery } from '../../redux/recipe/recipeApiSlice';
+import { Clock, Plus, Users, Utensils } from 'lucide-react';
+import { Ingredient } from '../../types/ingredient';
 
 const RecipeDetails = () => {
 
@@ -376,313 +378,18 @@ const RecipeDetails = () => {
         }
     };
 
-	/* useEffect(() => {
-        const instructionsTest: instruction[] = [
-            {
-                "name": "",
-                "steps": [
-                    {
-                        "equipment": [
-                            {
-                                "id": 404784,
-                                "image": "oven.jpg",
-                                "name": "oven",
-                                "temperature": {
-                                    "number": 200.0,
-                                    "unit": "Fahrenheit"
-                                }
-                            }
-                        ],
-                        "ingredients": [],
-                        "number": 1,
-                        "step": "Preheat the oven to 200 degrees F."
-                    },
-                    {
-                        "equipment": [
-                            {
-                                "id": 404661,
-                                "image": "whisk.png",
-                                "name": "whisk"
-                            },
-                            {
-                                "id": 404783,
-                                "image": "bowl.jpg",
-                                "name": "bowl"
-                            }
-                        ],
-                        "ingredients": [
-                            {
-                                "id": 19334,
-                                "image": "light-brown-sugar.jpg",
-                                "name": "light brown sugar"
-                            },
-                            {
-                                "id": 19335,
-                                "image": "sugar-in-bowl.png",
-                                "name": "granulated sugar"
-                            },
-                            {
-                                "id": 18371,
-                                "image": "white-powder.jpg",
-                                "name": "baking powder"
-                            },
-                            {
-                                "id": 18372,
-                                "image": "white-powder.jpg",
-                                "name": "baking soda"
-                            },
-                            {
-                                "id": 12142,
-                                "image": "pecans.jpg",
-                                "name": "pecans"
-                            },
-                            {
-                                "id": 20081,
-                                "image": "flour.png",
-                                "name": "all purpose flour"
-                            },
-                            {
-                                "id": 2047,
-                                "image": "salt.jpg",
-                                "name": "salt"
-                            }
-                        ],
-                        "number": 2,
-                        "step": "Whisk together the flour, pecans, granulated sugar, light brown sugar, baking powder, baking soda, and salt in a medium bowl."
-                    },
-                    {
-                        "equipment": [
-                            {
-                                "id": 404661,
-                                "image": "whisk.png",
-                                "name": "whisk"
-                            },
-                            {
-                                "id": 404783,
-                                "image": "bowl.jpg",
-                                "name": "bowl"
-                            }
-                        ],
-                        "ingredients": [
-                            {
-                                "id": 2050,
-                                "image": "vanilla-extract.jpg",
-                                "name": "vanilla extract"
-                            },
-                            {
-                                "id": 93622,
-                                "image": "vanilla.jpg",
-                                "name": "vanilla bean"
-                            },
-                            {
-                                "id": 1230,
-                                "image": "buttermilk.jpg",
-                                "name": "buttermilk"
-                            },
-                            {
-                                "id": 1123,
-                                "image": "egg.png",
-                                "name": "egg"
-                            }
-                        ],
-                        "number": 3,
-                        "step": "Whisk together the eggs, buttermilk, butter and vanilla extract and vanilla bean in a small bowl."
-                    },
-                    {
-                        "equipment": [],
-                        "ingredients": [
-                            {
-                                "id": 1123,
-                                "image": "egg.png",
-                                "name": "egg"
-                            }
-                        ],
-                        "number": 4,
-                        "step": "Add the egg mixture to the dry mixture and gently mix to combine. Do not overmix."
-                    },
-                    {
-                        "equipment": [],
-                        "ingredients": [],
-                        "length": {
-                            "number": 15,
-                            "unit": "minutes"
-                        },
-                        "number": 5,
-                        "step": "Let the batter sit at room temperature for at least 15 minutes and up to 30 minutes before using."
-                    },
-                    {
-                        "equipment": [
-                            {
-                                "id": 404779,
-                                "image": "griddle.jpg",
-                                "name": "griddle"
-                            },
-                            {
-                                "id": 404645,
-                                "image": "pan.png",
-                                "name": "frying pan"
-                            }
-                        ],
-                        "ingredients": [],
-                        "length": {
-                            "number": 3,
-                            "unit": "minutes"
-                        },
-                        "number": 6,
-                        "step": "Heat a cast iron or nonstick griddle pan over medium heat and brush with melted butter. Once the butter begins to sizzle, use 2 tablespoons of the batter for each pancake and cook until the bubbles appear on the surface and the bottom is golden brown, about 2 minutes, flip over and cook until the bottom is golden brown, 1 to 2 minutes longer."
-                    },
-                    {
-                        "equipment": [
-                            {
-                                "id": 404784,
-                                "image": "oven.jpg",
-                                "name": "oven",
-                                "temperature": {
-                                    "number": 200.0,
-                                    "unit": "Fahrenheit"
-                                }
-                            }
-                        ],
-                        "ingredients": [],
-                        "number": 7,
-                        "step": "Transfer the pancakes to a platter and keep warm in a 200 degree F oven."
-                    },
-                    {
-                        "equipment": [],
-                        "ingredients": [
-                            {
-                                "id": 10014037,
-                                "image": "bourbon.png",
-                                "name": "bourbon"
-                            }
-                        ],
-                        "number": 8,
-                        "step": "Serve 6 pancakes per person, top each with some of the bourbon butter."
-                    },
-                    {
-                        "equipment": [],
-                        "ingredients": [
-                            {
-                                "id": 19336,
-                                "image": "powdered-sugar.jpg",
-                                "name": "powdered sugar"
-                            },
-                            {
-                                "id": 19911,
-                                "image": "maple-syrup.png",
-                                "name": "maple syrup"
-                            }
-                        ],
-                        "number": 9,
-                        "step": "Drizzle with warm maple syrup and dust with confectioners' sugar."
-                    },
-                    {
-                        "equipment": [],
-                        "ingredients": [
-                            {
-                                "id": 12142,
-                                "image": "pecans.jpg",
-                                "name": "pecans"
-                            }
-                        ],
-                        "number": 10,
-                        "step": "Garnish with fresh mint sprigs and more toasted pecans, if desired."
-                    }
-                ]
-            },
-            {
-                "name": "Bourbon Molasses Butter",
-                "steps": [
-                    {
-                        "equipment": [
-                            {
-                                "id": 404669,
-                                "image": "sauce-pan.jpg",
-                                "name": "sauce pan"
-                            }
-                        ],
-                        "ingredients": [
-                            {
-                                "id": 10014037,
-                                "image": "bourbon.png",
-                                "name": "bourbon"
-                            },
-                            {
-                                "id": 19335,
-                                "image": "sugar-in-bowl.png",
-                                "name": "sugar"
-                            }
-                        ],
-                        "number": 1,
-                        "step": "Combine the bourbon and sugar in a small saucepan and cook over high heat until reduced to 3 tablespoons, remove and let cool."
-                    },
-                    {
-                        "equipment": [
-                            {
-                                "id": 404771,
-                                "image": "food-processor.png",
-                                "name": "food processor"
-                            }
-                        ],
-                        "ingredients": [
-                            {
-                                "id": 19304,
-                                "image": "molasses.jpg",
-                                "name": "molasses"
-                            },
-                            {
-                                "id": 10014037,
-                                "image": "bourbon.png",
-                                "name": "bourbon"
-                            },
-                            {
-                                "id": 2047,
-                                "image": "salt.jpg",
-                                "name": "salt"
-                            }
-                        ],
-                        "number": 2,
-                        "step": "Put the butter, molasses, salt and cooled bourbon mixture in a food processor and process until smooth."
-                    },
-                    {
-                        "equipment": [
-                            {
-                                "id": 404730,
-                                "image": "plastic-wrap.jpg",
-                                "name": "plastic wrap"
-                            },
-                            {
-                                "id": 404783,
-                                "image": "bowl.jpg",
-                                "name": "bowl"
-                            }
-                        ],
-                        "ingredients": [],
-                        "number": 3,
-                        "step": "Scrape into a bowl, cover with plastic wrap and refrigerate for at least 1 hour to allow the flavors to meld."
-                    },
-                    {
-                        "equipment": [],
-                        "ingredients": [],
-                        "length": {
-                            "number": 30,
-                            "unit": "minutes"
-                        },
-                        "number": 4,
-                        "step": "Remove from the refrigerator about 30 minutes before using to soften."
-                    }
-                ]
-            }
-        ]
-        //setInstructions(instructionsTest);
-        id && agent.Recipe.details(parseInt(id!))
-        .then(response => setRecipe(response))
-        .catch(error => console.log(error))
-        .finally(() => {
-            setLoading(false);
-        })
+	const [
+        addItemsToShoppingList, // This is the mutation trigger
+        { isLoading: isUpdating }, // This is the destructured mutation result
+    ] = useAddItemsToShoppingListMutation();
 
-	}, [id]); */
+    const handleAddItemToShoppingList = (ingredient: Ingredient) => {
+        addItemsToShoppingList({
+            IngredientId: ingredient.id,
+            Amount: ingredient.amount,
+            unit: ingredient.unit
+        })
+    }
 
     useEffect(() => {
         /* instructions.forEach((instruction) => {
@@ -722,89 +429,165 @@ const RecipeDetails = () => {
     return (
         <>
             {   recipe &&
-                <div className='container pt-2 pt-md-5'>
-                    <div className='recipe-hero w-100 h-100'>
-                        <div className='d-md-flex flex-col flex-md-row-reverse justify-content-md-between'>
-                            <img className='hero-bg col-md-5 h-100' src={recipe?.image} />
-                            <div className='recipe-hero-content col-md-6 d-flex flex-column justify-content-center align-items-left h-100 pt-2'>
-                                <h1>{recipe?.title}</h1>
-                                <div className='hero-icon-container'>
-                                    <span className='m-0'><FontAwesomeIcon role='button' icon={faHeart} style={{color: "#fda085"}} className='hero-save px-2'/>Save</span>
-                                    <span><FontAwesomeIcon role='button' icon={faComment} style={{color: "#fda085"}} className='hero-review px-2'/>Write a Review</span>
-                                </div>
-                                <div className='recipe-heading'>
-                                    <FontAwesomeIcon icon={faClock} /><span className='px-2'>Time: { recipe?.readyInMinutes } minutes</span>
-                                    <FontAwesomeIcon icon={faStar} /><span className='px-2'>Difficulty Level: Hard</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div className='recipe-details py-2'>
-                        <div className='details-header col-md-6 justify-content-between'>
-                            <h2>Ingredients</h2>
-                            <span className='d-flex justify-content-between'>
-                                <span className='px-4'>Servings: { servings }</span>
-                                <div className="btn-group btn-group-sm btn-servings" role="group" aria-label="Small button group">
-                                    <button type="button" className="btn btn-secondary" onClick={reduceServings}>-</button>
-                                    <button type="button" className="btn btn-secondary" onClick={() => setServings(servings + 1)}>+</button>
-                                </div>
-                            </span>
-                        </div>
-                        <div className='details-content d-md-flex justify-content-md-between w-100'>
-                            <div className='col-12 col-md-6'>
-                                <ul className='px-0'>
-                                    {
-                                        recipe?.extendedIngredients && recipe.extendedIngredients.map((ingredient, index) =>
-                                            <li className='ingredient-item d-flex justify-content-between' key={index}>
-                                                <span className='ingredient-name'>{ ingredient.name }</span>
-                                                {/* <span>{ (ingredient.measures.metric.amount * servings).toFixed(0) } { ingredient.measures.metric.unitShort }</span> */}
-                                            </li>
-                                    )}
-                                </ul>
-                            </div>
-                            <div className='col-12 col-md-5'>
-                                <div className='recipe-detail-nutrition p-3'>
-                                    <h4>Nutrition</h4>
-                                    <div className='row row-cols-2 g-3'>
-                                        <div className="col"><FontAwesomeIcon icon={faFire} /><span>Calories</span></div>
-                                        <div className="col"><FontAwesomeIcon icon={faEgg} /><span>Protein</span></div>
-                                        <div className="col"><FontAwesomeIcon icon={faBowlRice} /><span>CarbonDioxide</span></div>
-                                        <div className="col"><FontAwesomeIcon icon={faDroplet} /><span>Fat</span></div>
+                <div className='container-fluid d-flex justify-content-center h-100'>
+                    <div className='card-glass d-flex flex-column w-100 newrecipe-container p-2 p-md-4'>
+                        {/* <div className='recipe-hero w-100 h-100'>
+                            <div className='d-md-flex flex-col flex-md-row-reverse justify-content-md-between'>
+                                <img className='hero-bg col-md-5 h-100' src={recipe?.image} />
+                                <div className='recipe-hero-content d-flex flex-column justify-content-center align-items-left h-100 pt-2'>
+                                    <h1>{recipe?.title}</h1>
+                                    <div className='hero-icon-container'>
+                                        <button className='btn m-0'><FontAwesomeIcon role='button' icon={faHeart} style={{color: "#fda085"}} className='hero-save px-2'/>Save</button>
+                                        <button className='btn'><FontAwesomeIcon role='button' icon={faComment} style={{color: "#fda085"}} className='hero-review px-2'/>Write a Review</button>
+                                        <button className='btn'><FontAwesomeIcon role='button' icon={faList} style={{color: "#fda085"}} className='hero-review px-2'/>Add Ingredients to Shopping List</button>
+                                    </div>
+                                    <div className='recipe-heading'>
+                                        <FontAwesomeIcon icon={faClock} /><span className='px-2'>Time: { recipe?.readyInMinutes } minutes</span>
+                                        <FontAwesomeIcon icon={faStar} /><span className='px-2'>Difficulty Level: Hard</span>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                        
-                    </div>
-
-                    <div className='recipe-details py-2'>
-                        <div className='details-header col-md-6 justify-content-between'>
-                            <h2>Steps</h2>
-                        </div>
-                        <div className='details-content'>
-                            {
-                                recipe.instructions.map((instruction, index) => 
-                                    <div key={index}>
-                                        {
-                                            instruction.name && <div className='instruction-header'>{instruction.name}</div>
-                                        }
-                                        <div className='instruction-container'>
-                                            {
-                                                instruction.steps.map((step) => 
-                                                    <div className='step-container' key={step.stepNumber}>
-                                                        <span className='step-header'>Step {step.stepNumber}</span>
-                                                        <div className='step-text'>
-                                                            {
-                                                                getHighlightedText(step.description, [...ingredientList].join('|'))
-                                                            }
-                                                        </div>
-                                                    </div>
-                                                )
-                                            }
+                        </div> */}
+                        <div className="row g-4 mb-5">
+                            <div className="col-lg-6">
+                                <div className="position-relative rounded-4 overflow-hidden shadow-sm" style={{ aspectRatio: '4/3' }}>
+                                    {/* {recipe.images.length > 0 ? (
+                                        <img src={recipe.images[0]} alt={recipe.title} className="w-100 h-100 object-fit-cover" />
+                                    ) : (
+                                        <div className="w-100 h-100 bg-secondary-subtle d-flex align-items-center justify-content-center">
+                                            <Utensils size={64} className="text-secondary opacity-25" />
+                                        </div>
+                                    )}
+                                    <div className="position-absolute bottom-0 start-0 w-100 p-3 bg-gradient-dark text-white d-flex gap-2 overflow-auto" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}>
+                                        {recipe.images.slice(1).map((img, idx) => (
+                                            <div key={idx} className="rounded-2 overflow-hidden border border-white" style={{ width: '60px', height: '60px', flexShrink: 0 }}>
+                                                <img src={img} className="w-100 h-100 object-fit-cover" alt="Thumbnail" />
+                                            </div>
+                                        ))}
+                                    </div> */}
+                                    <div className="w-100 h-100 bg-secondary-subtle d-flex align-items-center justify-content-center">
+                                            <Utensils size={64} className="text-secondary opacity-25" />
+                                        </div>
+                                </div>
+                            </div>
+                            
+                            <div className="col-lg-6 d-flex flex-column justify-content-center">
+                                <div className="mb-2">
+                                    <span className="badge bg-orange-light text-orange border-orange-dashed rounded-pill px-3 py-1 fw-bold">
+                                        {recipe.cuisines || 'Global Cuisine'}
+                                    </span>
+                                </div>
+                                <h1 className="display-5 fw-bold text-dark mb-3">{recipe.title || 'Untitled Recipe'}</h1>
+                                {/* <p className="lead text-secondary mb-4">{recipe.description || 'No description available for this delicious recipe.'}</p> */}
+                                
+                                <div className="d-flex flex-wrap gap-4 pt-3 border-top">
+                                    <div className="d-flex align-items-center gap-2">
+                                        <div className="icon-circle bg-light text-warning">
+                                            <Clock size={20} />
+                                        </div>
+                                        <div>
+                                            <p className="m-0 text-muted small fw-bold text-uppercase">Prep Time</p>
+                                            <p className="m-0 fw-semibold">{recipe.cookingMinutes|| '--'}</p>
                                         </div>
                                     </div>
-                                )
-                            }
+                                    <div className="d-flex align-items-center gap-2">
+                                        <div className="icon-circle bg-light text-primary">
+                                            <Users size={20} />
+                                        </div>
+                                        <div>
+                                            <p className="m-0 text-muted small fw-bold text-uppercase">Servings</p>
+                                            <p className="m-0 fw-semibold">{recipe.servings || '--'} ppl</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Nutrition Cards */}
+                        <div className="row g-3 mb-5">
+                            <div className="col-6 col-md-3">
+                                <div className="card h-100 border-0 shadow-sm bg-white p-3 text-center rounded-4">
+                                    <p className="text-muted small fw-bold text-uppercase mb-1">Calories</p>
+                                    <h3 className="h4 fw-bold text-dark m-0">{'--'}</h3>
+                                </div>
+                            </div>
+                            <div className="col-6 col-md-3">
+                                <div className="card h-100 border-0 shadow-sm bg-white p-3 text-center rounded-4">
+                                    <p className="text-muted small fw-bold text-uppercase mb-1">Protein</p>
+                                    <h3 className="h4 fw-bold text-primary m-0">{'--'}</h3>
+                                </div>
+                            </div>
+                            <div className="col-6 col-md-3">
+                                <div className="card h-100 border-0 shadow-sm bg-white p-3 text-center rounded-4">
+                                    <p className="text-muted small fw-bold text-uppercase mb-1">Carbs</p>
+                                    <h3 className="h4 fw-bold text-warning m-0">{'--'}</h3>
+                                </div>
+                            </div>
+                            <div className="col-6 col-md-3">
+                                <div className="card h-100 border-0 shadow-sm bg-white p-3 text-center rounded-4">
+                                    <p className="text-muted small fw-bold text-uppercase mb-1">Fat</p>
+                                    <h3 className="h4 fw-bold text-danger m-0">{'--'}</h3>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className='recipe-details row py-2'>
+                            <div className='col-md-5'>
+                                <div className='details-header justify-content-between'>
+                                    <h2>Ingredients</h2>
+                                    <span className='d-flex justify-content-between'>
+                                        <span className='px-4'>Servings: { servings }</span>
+                                        <div className="btn-group btn-group-sm btn-servings" role="group" aria-label="Small button group">
+                                            <button type="button" className="btn btn-secondary" onClick={reduceServings}>-</button>
+                                            <button type="button" className="btn btn-secondary" onClick={() => setServings(servings + 1)}>+</button>
+                                        </div>
+                                    </span>
+                                </div>
+                                <div className='details-content d-md-flex justify-content-md-between w-100'>
+                                    <div className='col-12'>
+                                        <ul className='px-0'>
+                                            {
+                                                recipe?.extendedIngredients && recipe.extendedIngredients.map((ingredient, index) =>
+                                                    <li className='ingredient-item d-flex justify-content-between' key={index}>
+                                                        <span className='ingredient-name'>{ ingredient.name }</span>
+                                                        {/* <span>{ (ingredient.measures.metric.amount * servings).toFixed(0) } { ingredient.measures.metric.unitShort }</span> */}
+                                                        <button onClick={() => handleAddItemToShoppingList(ingredient)} className='btn btn-sm border-0 rounded-pill px-3 d-flex align-items-center gap-2 fw-medium shadow-sm btn-sunny'><Plus size={16}/>Shopping List</button>
+                                                    </li>
+                                            )}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className='col-md-7'>
+                                <div className='details-header justify-content-between'>
+                                    <h2>Steps</h2>
+                                </div>
+                                <div className='details-content'>
+                                    {
+                                        recipe.instructions.map((instruction, index) => 
+                                            <div key={index}>
+                                                {
+                                                    instruction.name && <div className='instruction-header'>{instruction.name}</div>
+                                                }
+                                                <div className='instruction-container'>
+                                                    {
+                                                        instruction.steps.map((step) => 
+                                                            <div className='step-container' key={step.stepNumber}>
+                                                                <span className='step-header'>Step {step.stepNumber}</span>
+                                                                <div className='step-text'>
+                                                                    {
+                                                                        getHighlightedText(step.description, [...ingredientList].join('|'))
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        )
+                                                    }
+                                                </div>
+                                            </div>
+                                        )
+                                    }
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

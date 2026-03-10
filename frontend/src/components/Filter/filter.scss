@@ -29,23 +29,18 @@
 }
 
 .accordion {
-    border-bottom: 1px solid #eaeaea;
     .accordion-button {
         background-color: transparent !important;
         box-shadow: none !important;
     }
 
     .accordion-item {
+        background-color: transparent;
         border: none;
     }
 
-    .accordion-header {
-        border-top: 1px solid #eaeaea;
-    }
-
     .accordion-body {
-        padding-left: 0;
-        padding-right: 0;
+        padding: 0;
         ul {
             list-style-type: none;
             padding-left: 0;

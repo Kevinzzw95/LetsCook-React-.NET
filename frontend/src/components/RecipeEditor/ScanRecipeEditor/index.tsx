@@ -1,18 +1,18 @@
 import axios from "axios";
 import { useRef, useState } from "react";
-import { importedRecipe } from "../../../types/recipe";
+import { RecipeDraft } from "../../../types/recipe";
 import './scan-recipe-editor.scss';
 import Preview from "../Preview";
 import { useUploadImagesMutation } from "../../../redux/recipe/recipeAiApiSlice";
 
 interface Props {
-    currRecipe: importedRecipe | undefined;
-    setCurrRecipe: React.Dispatch<React.SetStateAction<importedRecipe | undefined>>;
+    currRecipe: RecipeDraft;
+    updateData: (updates: Partial<RecipeDraft>) => void;
     isModalOpen: boolean;
     setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const ScanRecipeEditor = ({currRecipe, setCurrRecipe, isModalOpen, setIsModalOpen }: Props) => {
+const ScanRecipeEditor = ({currRecipe, updateData, isModalOpen, setIsModalOpen }: Props) => {
     const fileInputRef = useRef<HTMLInputElement | null>(null);
     const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
     const [uploadImages, { isLoading, isSuccess, error }] = useUploadImagesMutation();
@@ -25,14 +25,15 @@ const ScanRecipeEditor = ({currRecipe, setCurrRecipe, isModalOpen, setIsModalOpe
             setSelectedFiles(fileArray);
             try {
                 const res = await uploadImages(fileArray).unwrap();
-                setCurrRecipe({
+                const newRecipe = {
                     title: res.title,
                     servings: res.servings,
                     sourceName: 'image',
                     ingredients: res.ingredients,
                     steps: res.steps,
                     images: fileArray
-                });
+                };
+                updateData(newRecipe);
                 setIsModalOpen(true);
             } catch (error) {
                 console.error('Upload failed:', error);
@@ -47,7 +48,7 @@ const ScanRecipeEditor = ({currRecipe, setCurrRecipe, isModalOpen, setIsModalOpe
     return (
         <div className="d-flex justify-content-center">
             <div className="row col-10">
-                <button className="btn btn-primary btn-lg btn-scan-image" 
+                <button className="btn btn-sunny px-3 btn-lg btn-scan-image" 
                     type="button" 
                     onClick={handleUploadImage}>
                         Upload Images

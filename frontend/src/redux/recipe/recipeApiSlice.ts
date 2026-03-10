@@ -1,6 +1,7 @@
 import { FieldValues } from "react-hook-form";
-import { recipeCommon } from "../../types/recipe"
+import { recipeCommon, RecipeDraft } from "../../types/recipe"
 import { apiSlice } from "../api/apiSlice"
+import { ShoppingItem, ShoppingList, updateShoppingItemPayload } from "../../types/ingredient";
 
 export const recipeApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
@@ -9,36 +10,35 @@ export const recipeApiSlice = apiSlice.injectEndpoints({
         }),
         createRecipe: builder.mutation<recipeCommon, FieldValues>({
             query: recipe => ({
-              url: "recipe/",
-              method: 'POST',
-              body: createFormData(recipe),
+				url: "recipe/",
+				method: 'POST',
+				body: createFormData(recipe),
             }),
         }),
+        addItemsToShoppingList: builder.mutation<ShoppingItem, FieldValues>({
+            query: shoppingList => ({
+				url: "shoppingList/",
+				method: 'POST',
+				body: createFormData(shoppingList),
+            })
+        }),
+		getShoppingList: builder.query<ShoppingList, void>({
+            query: () => 'shoppingList'
+        }),
+		updateShoppingItem: builder.mutation<ShoppingItem, updateShoppingItemPayload>({
+			query: ({ itemId, amount, unit, store, isBought }) => ({
+				url: `/shoppingList/${itemId}`,
+				method: "PUT",
+				body: {
+					amount,
+					unit,
+					store,
+					isBought
+				}
+			})
+		})
     }),
 })
-
-function fieldValuesToFormData(values: FieldValues): FormData {
-    const formData = new FormData();
-  
-    for (const key in values) {
-      if (Object.prototype.hasOwnProperty.call(values, key)) {
-        const value = values[key];
-  
-        // Handle arrays and files if needed
-        if (Array.isArray(value)) {
-          value.forEach((item, index) => {
-            formData.append(`${key}[${index}]`, item);
-          });
-        } else if (value instanceof File) {
-          formData.append(key, value);
-        } else {
-          formData.append(key, value);
-        }
-      }
-    }
-  
-    return formData;
-}
 
 function createFormData(item: FieldValues) {
     const formData = new FormData();
@@ -47,11 +47,13 @@ function createFormData(item: FieldValues) {
             item[key].forEach((file: File) => {
                 formData.append("images", file);
             });
-        } else {
+        } else if(key === 'ingredients' || key === 'steps') {
+			formData.append(key, JSON.stringify(item[key]));
+		} else {
             formData.append(key, item[key]);
         }
     }
     return formData;
 }
 
-export const { useGetRecipeQuery, useCreateRecipeMutation } = recipeApiSlice; 
+export const { useGetRecipeQuery, useCreateRecipeMutation, useAddItemsToShoppingListMutation, useGetShoppingListQuery,  useUpdateShoppingItemMutation } = recipeApiSlice; 

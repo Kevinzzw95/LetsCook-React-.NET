@@ -1,10 +1,14 @@
+using System.Text;
 using API.Data;
 using API.Entity;
 using API.Middleware;
 using API.RequestHelpers;
 using API.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -14,38 +18,86 @@ builder.Services.AddControllers();
 builder.Services.AddAutoMapper(typeof(MappingProfiles).Assembly);
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(c =>
+{
+  var jwtSecurityScheme = new OpenApiSecurityScheme
+  {
+    BearerFormat = "JWT",
+    Name = "Authorization",
+    In = ParameterLocation.Header,
+    Type = SecuritySchemeType.ApiKey,
+    Scheme = JwtBearerDefaults.AuthenticationScheme,
+    Description = "Put bearer + your token in the box below",
+    Reference = new OpenApiReference
+    {
+      Id = JwtBearerDefaults.AuthenticationScheme,
+      Type = ReferenceType.SecurityScheme
+    }
+  };
+
+  c.AddSecurityDefinition(jwtSecurityScheme.Reference.Id, jwtSecurityScheme);
+  c.AddSecurityRequirement(new OpenApiSecurityRequirement
+  {
+    {
+      jwtSecurityScheme, Array.Empty<string>()
+    }
+    });
+});
 builder.Services.AddDbContext<RecipeContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 builder.Services.AddScoped<ImageService>();
-builder.Services.AddIdentityCore<User>()
+builder.Services.AddIdentityCore<User>(opt =>
+{
+    opt.User.RequireUniqueEmail = true;
+})
     .AddRoles<IdentityRole>()
     .AddEntityFrameworkStores<RecipeContext>();
-builder.Services.AddAuthentication();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(opt =>
+    {
+        opt.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWTSettings:TokenKey"]))
+        };
+    });
 builder.Services.AddAuthorization();
+builder.Services.AddScoped<TokenService>();
 
 var app = builder.Build();
 
-app.UseMiddleware<ExceptionMiddleware>(); 
+app.UseMiddleware<ExceptionMiddleware>();  
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
-    app.UseSwaggerUI();
+    app.UseSwaggerUI(c =>
+    {
+        c.ConfigObject.AdditionalItems.Add("persistAuthorization", "true");
+    }); 
 }
 
 app.UseDefaultFiles();
 app.UseStaticFiles();
+app.UseRouting();
 
 //app.UseHttpsRedirection();
-app.UseCors(policy =>
-    policy.WithOrigins("http://localhost:3000")
-          .AllowAnyHeader()
-          .AllowAnyMethod());
+app.UseCors(opt =>
+{
+    opt.
+        WithOrigins("http://localhost:3000")
+        .AllowAnyHeader()
+        .AllowAnyMethod()
+        .AllowCredentials();
+});
 
-//app.UseAuthorization();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapControllers();
 

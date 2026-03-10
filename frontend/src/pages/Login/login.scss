@@ -1,6 +1,6 @@
 
 .login-container {
-    height: 60vh;
+    max-width: 500px !important;
     .login-background {
         background: var(--accent-color);
         border-radius: 0 30% 30% 0;

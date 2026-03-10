@@ -3,30 +3,30 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import './image-editor.scss';
 import { useEffect, useState } from "react";
 import { useDropzone } from 'react-dropzone';
-import { importedRecipe } from "../../../types/recipe";
-import { useFormContext } from "react-hook-form";
+import { RecipeDraft } from "../../../types/recipe";
+import { Control, useFormContext, UseFormRegister } from "react-hook-form";
+import { Upload, X } from "lucide-react";
 
 type Props = {
-    currRecipe: importedRecipe | undefined,
+    currRecipe: RecipeDraft;
+    updateData: (updates: Partial<RecipeDraft>) => void;
+    control: Control<RecipeDraft>;
+    register: UseFormRegister<RecipeDraft>;
 }
 
-const ImageEditor = ({currRecipe}: Props) => {
+const ImageEditor = ({currRecipe, updateData, control, register}: Props) => {
     const { watch, reset, setValue, formState: { errors }} = useFormContext();
     const watchImages = watch("images", []);
-    const [previews, setPreviews] = useState<string[]>([]);
 
-    const handleRemoveImage = (taregtIndex: number) => {
-        setPreviews(previews.filter((preview, index) => {
-            console.log(taregtIndex)
-            return index !== taregtIndex;
-        }));
+    const handleRemoveImage = (targetIndex: number) => {
+        updateData({ images: currRecipe.images!.filter((_, index) => index !== targetIndex) });
     };  
 
     const onDrop = (acceptedFiles: File[]) => {
         //const file = acceptedFiles[0];
         //addFile(file);
         setValue("images", [...watchImages, acceptedFiles[0]]);
-        setPreviews([...previews, URL.createObjectURL(acceptedFiles[0])]);
+        updateData({ images: [...(currRecipe.images ?? []), acceptedFiles[0]] });
     };
 
     const { getRootProps, getInputProps } = useDropzone({
@@ -42,45 +42,43 @@ const ImageEditor = ({currRecipe}: Props) => {
     useEffect(() => {
         if(currRecipe?.images) {
             setValue("images", currRecipe.images);
-            setPreviews(currRecipe.images.map((image => URL.createObjectURL(image))));
         }
     }, [currRecipe?.images, setValue]);
 
     useEffect(() => {
-        return () => {
-          if (previews) previews.map((preview) => URL.revokeObjectURL(preview));
-        };
-    }, [reset, previews]);
 
-    /* const addFile = (file: File) => {
-        if (file) {
-            const reader = new FileReader(); // Create a FileReader to read the file
-      
-            reader.onloadend = () => {
-              setImages([...images, reader.result as string]); // Set the image URL as the state
-            };
-      
-            reader.readAsDataURL(file); // Read the file as a data URL
-        }
-    } */
+    }, [reset]);
 
     return (
         <>
-            <div className='add-pictures col-6 col-md-3 p-2 d-flex align-items-center justify-content-center mx-md-2' {...getRootProps()}>
+            <div className='add-pictures col-6 p-2 d-flex align-items-center justify-content-center mx-md-2 cursor-pointer border-orange-dashed bg-orange-light rounded-4 p-5 hover-shadow transition-all' {...getRootProps()}>
                 <input className="d-none" {...getInputProps()}/>
 
-                <label htmlFor="files" className='add-icon-wrapper'>
-                    <div className='w-100 d-flex justify-content-center'>
-                        <FontAwesomeIcon className='add-icon' icon={faCirclePlus} />
+                <label htmlFor="files" className='add-icon-wrapper text-center'>
+                    <div className="bg-white rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3 shadow-sm" style={{ width: '64px', height: '64px' }}>
+                        <Upload size={32} className="text-orange" />
                     </div>
-                    <p className='p-2 text-center'>Click or Drag to Add Images</p>
+                    <h3 className="h5 fw-semibold text-dark mb-1">
+                        Upload Photos
+                    </h3>
+                    <p className="text-muted small mb-0">
+                        Click to browse or drag and drop your delicious photos here
+                    </p>
                 </label>
             </div>
             {
-                previews && previews.map((preview, index) => 
-                    <div className='selected-image col-6 col-md-3 d-flex justify-content-center position-relative p-2' key={index}>
-                        <FontAwesomeIcon type='button' icon={faXmark} className="position-absolute top-0 end-0 p-3 delete-image" data-bs-toggle="modal" data-bs-target={`#removeIngredientsModal${index}`} />
-                        <div className="modal remove-ingredient-modal fade" id={`removeIngredientsModal${index}`}>
+                currRecipe.images && currRecipe.images.map((file, index) => 
+                    <div className='selected-image col-6 col-md-3 d-flex justify-content-center position-relative mx-md-2' key={index}>
+                        <button
+                            type="button"
+                            className="btn btn-light text-danger btn-sm rounded-circle position-absolute top-0 end-0 m-2 p-0 m-2 d-flex align-items-center justify-content-center shadow-sm"
+                            data-bs-toggle="modal" 
+                            data-bs-target={`#removeImagesModal${index}`}
+                            style={{ width: '24px', height: '24px' }}
+                        >
+                            <X size={14} />
+                        </button>
+                        <div className="modal remove-ingredient-modal fade" id={`removeImagesModal${index}`}>
                             <div className="modal-dialog">
                                 <div className="modal-content">
                                     <div className="modal-header border-0">
@@ -96,7 +94,7 @@ const ImageEditor = ({currRecipe}: Props) => {
                                 </div>
                             </div>
                         </div>
-                        {preview && <img src={preview} alt="Selected preview" className="object-fit-fill border rounded w-100" />}
+                        {file && <img src={URL.createObjectURL(file)} alt="Selected preview" className="object-fit-cover w-100 border rounded w-100" />}
                     </div>
                 )
             }

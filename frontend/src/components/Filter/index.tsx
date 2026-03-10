@@ -20,7 +20,7 @@ const Filter = ({ isOpenMobileFilter, openFilter }: Props) => {
     };
 
     return (
-        <div className={`col-md-5 col-lg-3 refinement-bar ${isOpenMobileFilter ? 'active' : ''}`}>
+        <div className={`refinement-bar card-glass py-4 px-2 d-lg-block ${isOpenMobileFilter ? 'active' : ''}`}>
             <div className="refinement-container">
                 <div className='refinement-header py-2 d-md-none'>
                     <div className="d-flex justify-content-between align-items-center">
@@ -35,7 +35,7 @@ const Filter = ({ isOpenMobileFilter, openFilter }: Props) => {
                         </button>
                     </div>
                 </div>
-                <div className="accordion" id="accordionRefinement">
+                <div className="accordion w-bold text-secondary text-uppercase small mb-2 d-block" id="accordionRefinement">
                     {
                         REFINEMENTS && Object.keys(REFINEMENTS).map((refinementName) => 
                             <div className="accordion-item" key={refinementName}>

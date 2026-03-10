@@ -36,13 +36,23 @@ namespace API.Controllers
         {
             var recipes = await _context.Recipes.ToListAsync();
             var recipeSimpleList = from recipe in recipes
-                            select new RecipeSimpleDto
-                            {
-                                Id = recipe.Id,
-                                Title = recipe.Title,
-                                //Image = recipe.Image,
-                                //ImageType = recipe.ImageType
-                            };
+                                select new RecipeDto
+                                {
+                                    Id = recipe.Id,
+                                    Title = recipe.Title,
+                                    ImageUrls = recipe.ImageInfo?.Values?.ToList(),
+                                    Servings = recipe.Servings,
+                                    CookingMinutes = recipe.CookingMinutes,
+
+                                    SourceName = recipe.SourceName,
+                                    SourceUrl = recipe.SourceUrl,
+
+                                    Cuisine = recipe.Cuisine,
+                                    Diets = recipe.Diets?.ToList(),
+
+                                    DishType = recipe.DishType,
+                                    Summary = recipe.Summary,
+                                };
             return Ok(recipeSimpleList.ToList());
         }
 
@@ -62,6 +72,7 @@ namespace API.Controllers
                             join i in ingredients on ei.Id equals i.Id
                             select new ExtendedIngredientDto
                             {
+                                Id = i.Id,
                                 Name = i.Name,
                                 Image = i.Image,
                                 Consistency = ei.Consistency,
@@ -93,26 +104,31 @@ namespace API.Controllers
                 }     
             }
 
-            var stepNumber = 1;
+            var stepsObject = JsonSerializer.Deserialize<List<StepDto>>(
+                createRecipeDto.Steps,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            );
             recipe.Instructions =
             [
                 new Instruction {
-                    Name = "",
-                    Steps = createRecipeDto.InstructionsRaw.Select(step => new Step {
-                        StepNumber = stepNumber++,
-                        Description = step
+                    Steps = stepsObject.Select(step => new Step {
+                        StepNumber = step.StepNumber,
+                        Description = step.Description
                     }).ToList()
                 }
             ];
 
             var recipeIngredients = new List<object>();
-            foreach (var ingredient in createRecipeDto.Ingredients) {
-                 
-                var parseIngredient = ParseIngredient(ingredient);
-                var existingIngredient = await _context.Ingredients.FirstOrDefaultAsync(i => i.Name == parseIngredient.name);
+            var ingredientsObject = JsonSerializer.Deserialize<List<CreateIngredientDto>>(
+                createRecipeDto.Ingredients,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            );
+            foreach (var ingredient in ingredientsObject) {
+                
+                var existingIngredient = await _context.Ingredients.FirstOrDefaultAsync(i => i.Name == ingredient.Name);
                 if(existingIngredient == null) {
                     var newIngredient = new Ingredient {
-                        Name = ingredient
+                        Name = ingredient.Name
                     };
                     _context.Ingredients.Add(newIngredient);
                     var ingredientResult = await _context.SaveChangesAsync() > 0;
@@ -120,10 +136,10 @@ namespace API.Controllers
                         existingIngredient = newIngredient;
                     }    
                 }
-                var recipeIngredient = new {
+                var recipeIngredient = new ExtendedIngredient{
                     Id = existingIngredient.Id,
-                    Original = ingredient,
-                    Amount = parseIngredient.quantity
+                    Amount = ingredient.Amount,
+                    Unit = ingredient.Unit
                 };
                 recipeIngredients.Add(recipeIngredient);
             }

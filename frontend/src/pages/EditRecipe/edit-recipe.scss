@@ -1,15 +1,8 @@
 .newrecipe-tabs {
-    font-weight: 700;
     background: #F5F5F5;
     border-radius: 10px;
     box-shadow: rgba(50, 50, 93, 0.25) 0px 10px 100px -12px inset, rgba(0, 0, 0, 0.3) 0px 10px 20px -10px inset;
     .nav-pills .nav-link {
-        color: black;
-        &.active {
-            color: var(--contrast-color);
-            background: var(--accent-color);
-        }
-
         @media (max-width: 768px) {
             font-size: 13px;
             padding-inline: 8px;
@@ -37,10 +30,6 @@
             font-size: 15px;
         }
     }
-}
-
-.newrecipe-container {
-    min-height: 70vh;
 }
 
 .recipe-confirmation-modal {

@@ -1,7 +1,6 @@
 .add-pictures {
     border: dashed #fda085 3px;
     border-radius: 10px;
-    width: 15vw;
     height: 220px;
     color: #fda085;
 
@@ -21,9 +20,10 @@
 }
 
 .selected-image {
-    width: 15vw;
-    height: 220px;
     color: #fda085;
+    img {
+        max-height: 220px;
+    }
     .delete-image {
         height: 2rem;
     }

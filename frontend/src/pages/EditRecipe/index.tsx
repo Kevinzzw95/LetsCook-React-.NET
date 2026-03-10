@@ -8,13 +8,14 @@ import StepsEditor from '../../components/RecipeEditor/StepsEditor';
 import NotesEditor from '../../components/RecipeEditor/NotesEditor';
 import { FormProvider, FieldValues, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { validationSchema } from '../../admin/recipeFormValidation';
-import { importedRecipe, recipeCommon } from '../../types/recipe';
+import { validationSchema } from './recipeFormValidation';
+import { RecipeDraft, recipeCommon, Tab } from '../../types/recipe';
 import ScanRecipeEditor from '../../components/RecipeEditor/ScanRecipeEditor';
 import RecipeDetails from '../RecipeDetails';
 import Preview from '../../components/RecipeEditor/Preview';
 import { useCreateRecipeMutation } from '../../redux/recipe/recipeApiSlice';
 import UploadByUrlEditor from '../../components/RecipeEditor/UploadByUrlEditor';
+import { BookOpen, CheckCircle2, ChevronRight, ChefHat, Image as ImageIcon, List } from 'lucide-react';
 
 interface Props {
     recipe?: recipeCommon;
@@ -23,57 +24,63 @@ interface Props {
 
 const EditRecipe = () => {
 
-    const tabs: string[] = [
-        'Upload Recipes',
-        'Overview',
-        'Ingredients',
-        'Steps',
-        'Notes',
-        'Images'
-    ]
-    const [ currTab, setCurrTab ] = useState<string>(tabs[0]);
+    const tabs = [
+        { id: Tab.UPLOAD, label: 'Upload Recipes', icon: ImageIcon },
+        { id: Tab.OVERVIEW, label: 'Overview', icon: BookOpen },
+        { id: Tab.INGREDIENTS, label: 'Ingredients', icon: List },
+        { id: Tab.STEPS, label: 'Steps', icon: CheckCircle2 },
+        { id: Tab.IMAGES, label: 'Images', icon: ImageIcon }
+    ];
+    
+    const [ currTab, setCurrTab ] = useState<Tab>(Tab.OVERVIEW);
     const [ hasErrors, setHasErrors ] = useState<boolean>(false);
-    const [ currRecipe, setCurrRecipe  ] = useState<importedRecipe>();
-    const [ isModalOpen, setIsModalOpen ] = useState<boolean>(false);
-    const methods = useForm({
-        resolver: yupResolver<FieldValues>(validationSchema),
+    const [ currRecipe, setCurrRecipe  ] = useState<RecipeDraft>({
+        title: '',
+        types: '',
+        cuisines: '',
+        diets: '',
+        sourceName: '',
+        servings: 1,
+        prepTime: 0,
+        ingredients: [],
+        steps: [],
+        images: [],
     });
+    const [ isModalOpen, setIsModalOpen ] = useState<boolean>(false);
+    const methods = useForm<RecipeDraft>({
+        resolver: yupResolver<RecipeDraft>(validationSchema),
+        defaultValues: {
+            ingredients: currRecipe.ingredients
+        }
+    });
+
+    const updateData = (updates: Partial<RecipeDraft>) => {
+        setCurrRecipe((prev) => ({ ...prev, ...updates }));
+    };
+
     const [
         createRecipe, // This is the mutation trigger
         { isLoading: isUpdating }, // This is the destructured mutation result
     ] = useCreateRecipeMutation();
+
     const {
         reset,
+        control, 
+        register,
         handleSubmit,
         watch,
-        formState: { isSubmitting, isDirty }
+        formState: { isSubmitting, isDirty, errors } 
     } = methods;
-    const handleSubmitData = (data: FieldValues) => {
-        data['SourceName'] = 'image';
+
+    const handleSubmitData = (data: RecipeDraft) => {
+        data['sourceName'] = 'image';
         console.log(data);
         createRecipe(data);
     };
 
     useEffect(() => {
-        const observer = new MutationObserver((mutationsList, observer) => {
-            mutationsList.forEach((mutation) => {
-                if (mutation.type === 'childList') {
-                    const element = document.querySelector('.create-recipe-error');
-                    if (element) {
-                        setHasErrors(true);
-                    } else {
-                        setHasErrors(false);
-                    }
-                }
-            });
-        });
-    
-        // Observe changes in the document body or a specific parent element
-        observer.observe(document.body, { childList: true, subtree: true });
-    
-        // Cleanup the observer when the component unmounts
-        return () => observer.disconnect();
-    }, []);
+        setHasErrors(Object.keys(errors).length > 0);
+    }, [errors])
 
     const watchFile = watch("file", null);
     useEffect(() => {
@@ -83,55 +90,92 @@ const EditRecipe = () => {
         };
     }, [reset, watchFile, isDirty]);
 
+    const handleNext = (event: Event) => {
+        event.preventDefault();
+        const currentIndex = tabs.findIndex(t => t.id === currTab);
+        if (currentIndex < tabs.length - 1) {
+            setCurrTab(tabs[currentIndex + 1].id);
+        }
+    };
+
     return (
         <>
-            <div className="container newrecipe-container">
-                <FormProvider {...methods}>
-                    <form id="createRecipe" onSubmit={handleSubmit(handleSubmitData)}>
-                        <div className='newrecipe-heading d-flex justify-content-center my-3'>
-                            <h3 className='mb-0'>Edit Recipe</h3>
-                            <input type="submit" className="btn btn-newrecipe-submit px-0" value="Save Recipe" />
-                        </div>
-                        {hasErrors && 
-                            <div>
-                                <p>Whoops, Some feilds are invalid. Please check and put valid data to submit.</p>
-                            </div>
-                        }
-                        <div className='newrecipe-tabs d-flex justify-content-center p-2'>
-                            <ul className="nav nav-pills nav-fill w-100">
+            <div className="container-fluid d-flex justify-content-center">
+                <div className="card-glass d-flex flex-column w-100 newrecipe-container">
+                    <FormProvider {...methods}>
+                        <form id="createRecipe" onSubmit={handleSubmit(handleSubmitData)}>
+                            <div className="d-flex flex-column flex-md-row align-items-center justify-content-center p-3 bg-light border-bottom gap-3">
+                                <ul className="col-8 nav nav-pills nav-fill">
+                                    {
+                                        tabs.map((tab) => { 
+                                            const Icon = tab.icon;
+                                            return (
+                                                <li className="nav-item" key={tab.id}>
+                                                    <button 
+                                                        type='button'
+                                                        className={`nav-link p-1 p-md-2 d-flex align-items-center justify-content-center gap-2 ${currTab === tab.id ? 'active' : ''}`} 
+                                                        aria-current="page"
+                                                        onClick={() => setCurrTab(tab.id)}>
+                                                            <Icon size={16} />
+                                                        {tab.label}
+                                                    </button>
+                                                </li>
+                                            );
+                                        }) 
+                                    }
+                                </ul>
+                            </div> 
+                            {hasErrors && 
+                                <div>
+                                    <p>Whoops, Some feilds are invalid. Please check and put valid data to submit.</p>
+                                </div>
+                            }
+                            <div className='d-flex flex-column flex-grow-1 position-relative'>
+                                <main className="flex-grow-1 p-4 p-md-5 overflow-auto">
+                                    <div className={`${currTab === Tab.UPLOAD ? 'col-12 align-self-center text-center py-5 bg-orange-light border-orange-dashed rounded-3' : 'd-none'}`}>
+                                        <UploadByUrlEditor currRecipe={currRecipe} updateData={updateData} isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
+                                        <ScanRecipeEditor currRecipe={currRecipe} updateData={updateData} isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
+                                    </div>
+                                    <div className={`${currTab === Tab.OVERVIEW ? '' : 'd-none'}`}>
+                                        <OverviewEditor currRecipe={currRecipe} updateData={updateData} />
+                                    </div>
+                                    <div className={`${currTab === Tab.STEPS ? 'col-12' : 'd-none'}`}>
+                                        <StepsEditor currRecipe={currRecipe} control={control} updateData={updateData} register={register} />
+                                    </div>
+                                    <div className={`${currTab === Tab.INGREDIENTS ? 'w-100' : 'd-none'}`}>
+                                        <IngredientsEditor currRecipe={currRecipe} control={control} updateData={updateData} register={register} />
+                                    </div>
+                                    <div className={`d-flex flex-wrap justify-content-between justify-content-md-start w-100 gap-2 ${currTab === Tab.IMAGES ? '': 'd-none'}`}>
+                                        <ImageEditor currRecipe={currRecipe} control={control} updateData={updateData} register={register}/>
+                                    </div> 
+                                </main>
+
                                 {
-                                    tabs.map((tab) => 
-                                        <li className="nav-item" key={tab}>
-                                            <a className={`nav-link p-1 p-md-2 ${currTab === tab ? 'active' : ''}`} aria-current="page" href="#" onClick={() => setCurrTab(tab)}>{tab}</a>
-                                        </li>
-                                    ) 
+                                    currTab !== Tab.UPLOAD && 
+                                    <footer className="p-4 px-md-5 border-top bg-white d-flex justify-content-between align-items-center mt-auto">
+                                        <button className="btn btn-light text-secondary fw-medium px-4 py-2 rounded-3">
+                                            Cancel
+                                        </button>
+                                        {currTab !== Tab.IMAGES ? (
+                                            <button 
+                                                onClick={handleNext}
+                                                className="btn btn-dark d-flex align-items-center gap-2 px-4 py-2 rounded-3 shadow"
+                                            >
+                                                Next Step <ChevronRight size={16} />
+                                            </button>
+                                        ) : (
+                                            <button type="submit" className="btn btn-sunny px-5 py-2 rounded-3 fw-bold shadow">
+                                                Publish Recipe
+                                            </button>
+                                        )}
+                                    </footer>
                                 }
-                            </ul>
-                        </div> 
-                        <div className='d-flex newrecipe-content mt-3 p-2 p-md-4 justify-content-center'>
-                            <div className={`${currTab === 'Upload Recipes' ? 'col-12 align-self-center' : 'd-none'}`}>
-                                <UploadByUrlEditor currRecipe={currRecipe} setCurrRecipe={setCurrRecipe} isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
-                                <ScanRecipeEditor currRecipe={currRecipe} setCurrRecipe={setCurrRecipe} isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
                             </div>
-                            <div className={`${currTab === 'Overview' ? '' : 'd-none'}`}>
-                                <OverviewEditor currRecipe={currRecipe}/>
-                            </div>
-                            <div className={`${currTab === 'Steps' ? 'col-12' : 'd-none'}`}>
-                                <StepsEditor currRecipe={currRecipe} />
-                            </div>
-                            <div className={`${currTab === 'Ingredients' ? 'w-100' : 'd-none'}`}>
-                                <IngredientsEditor currRecipe={currRecipe}/>
-                            </div>
-                            <div className={`${currTab === 'Notes' ? 'col-12' : 'd-none'}`}>
-                                <NotesEditor />
-                            </div>
-                            <div className={`d-flex flex-wrap justify-content-between justify-content-md-start w-100 ${currTab === 'Images' ? '': 'd-none'}`}>
-                                <ImageEditor currRecipe={currRecipe}/>
-                            </div>
-                        </div>
-                    </form>
-                </FormProvider>
+                        </form>
+                    </FormProvider>
+                </div> 
             </div>
+            
             {isModalOpen && (
                 <div className="recipe-confirmation-modal">
                     <div className="recipe-confirmation-modal-content">

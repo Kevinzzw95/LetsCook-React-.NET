@@ -1,22 +1,21 @@
 
 export interface loginRes {
-    refresh: string;
-    access: string;
+    token: string;
+    email: string;
+    username:string;
 }
 
 export interface userSliceState {
     username: string;
     email: string;
-    fav_list: number[];
-    watched_list: number[];
-}
-
-export interface postMovie {
-    fav_list: number[];
-    watched_list: number[];
 }
 
 export interface postAuth {
 	username: string;
+    email: string;
 	password: string;
+}
+
+export interface AuthResponse {
+  token: string;
 }

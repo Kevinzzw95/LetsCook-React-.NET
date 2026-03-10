@@ -1,11 +1,12 @@
-import { ingredient } from "./ingredient"
+import { Ingredient } from "./ingredient"
 import { instruction } from "./instruction";
 import { SearchItem } from "./searchItem";
+import { Step } from "./step";
 
 export interface recipeCommon {
     "id"?: string,
     "title": string,
-    "image": string,
+    "images": string[],
     "imageType": string,
     "servings": number,
     "readyInMinutes"?: number,
@@ -13,22 +14,11 @@ export interface recipeCommon {
     "preparationMinutes"?: number,
     "sourceName": string,
     "sourceUrl": string,
-    "healthScore": number,
-    "cuisines": string[],
-    "dairyFree": boolean,
+    "cuisines": string,
     "diets": string[],
-    "glutenFree": boolean,
     "instructions": instruction[],
-    "ketogenic": boolean,
-    "lowFodmap": boolean,
-    "occasions": string[],
-    "sustainable": boolean,
-    "vegan": boolean,
-    "vegetarian": boolean,
-    "veryHealthy": boolean,
-    "veryPopular": boolean,
     "dishTypes": string[],
-    "extendedIngredients": ingredient[],
+    "extendedIngredients": Ingredient[],
     "summary": string
 }
 
@@ -39,11 +29,24 @@ export interface recipeSearchRes {
     totalResults: number
 }
 
-export interface importedRecipe {
+export interface RecipeDraft {
     title: string,
-    ingredients: ingredient[],
-    steps: string[],
     servings: number,
-    sourceName: string,
-    images: File[]
+    types?: string, 
+    cuisines?: string,
+    diets?: string,
+    prepTime?: number,
+    ingredients: Ingredient[],
+    steps: Step[],
+    sourceName?: string,
+    images?: File[]
+}
+
+export enum Tab {
+    UPLOAD = 'uploadRecipes',
+    OVERVIEW = 'overview',
+    INGREDIENTS = 'ingredients',
+    STEPS = 'steps',
+    NOTES = 'notes',
+    IMAGES = 'images'
 }

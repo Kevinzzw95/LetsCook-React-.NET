@@ -41,5 +41,23 @@ namespace API.Extensions
                 
             };
         }
+
+        public static ShoppingListDto MapShoppingListToDto(this ShoppingList shoppingList)
+        {
+            return new ShoppingListDto
+            {
+                UserId = shoppingList.UserId,
+                Items = shoppingList.Items.Select(item => new ShoppingItemDto
+                {
+                    ItemId = item.Id,
+                    Name = item.Ingredient.Name,
+                    Image = item.Ingredient.Image,
+                    Amount = item.Amount,
+                    Unit = item.Unit,                
+                    Store = item.Store,
+                    IsBought = item.IsBought
+                }).ToList()
+            };
+        }
     }
 }

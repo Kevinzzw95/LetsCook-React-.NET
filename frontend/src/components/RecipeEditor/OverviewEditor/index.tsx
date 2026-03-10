@@ -4,10 +4,11 @@ import RecipeTimePicker from '../../RecipeTimePicker';
 import { useEffect, useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { ErrorMessage } from "@hookform/error-message";
-import { importedRecipe } from '../../../types/recipe';
+import { RecipeDraft } from '../../../types/recipe';
 
 type Props = {
-    currRecipe: importedRecipe | undefined,
+    currRecipe: RecipeDraft | undefined;
+    updateData: (updates: Partial<RecipeDraft>) => void;
 }
 
 const OverviewEditor = ({currRecipe}: Props) => {
@@ -52,7 +53,7 @@ const OverviewEditor = ({currRecipe}: Props) => {
             <div className='row'>
                 {
                     CATEGORIES && CATEGORIES.map((category) => 
-                        <div className='col-12 col-md-6' key={category.name}>
+                        <div className='col-12 col-md-4' key={category.name}>
                             <label htmlFor={category.name} className="newrecipe-form-label py-2">{ category.name }(Optional)</label>
                             <select {...register(category.name)} id={category.name} className="form-select" defaultValue={"None"} aria-label="Default select example">
                                 <option value="None" disabled>Choose one {category.name}</option>
@@ -71,7 +72,7 @@ const OverviewEditor = ({currRecipe}: Props) => {
                     <label htmlFor="recipeResource" className="newrecipe-form-label py-2">Resource(Optional)</label>
                     <input {...register("sourceUrl")} type="text" className="form-control" id="recipeResource" aria-describedby="recipeResource" />
                 </div> */}
-                <div className="col-12 col-md-6">
+                <div className="col-12 col-md-4">
                     <label htmlFor="recipeServings" className="newrecipe-form-label py-2">Servings</label>
                     <input 
                         {...register("servings")}
@@ -82,20 +83,17 @@ const OverviewEditor = ({currRecipe}: Props) => {
                         aria-describedby="recipeServings" 
                         onChange={(e) => setValue("servings", Number(e.target.value))} />
                 </div>
-            </div>
-            <div className='row'>
-                <input {...register("preparationMinutes")} hidden value={preparationTime}/>
-                <input {...register("cookingMinutes")} hidden value={cookingTime}/>
-                <div className="col-12 col-md-6">
+                {/* <input {...register("preparationMinutes")} hidden value={preparationTime}/>
+                <input {...register("cookingMinutes")} hidden value={cookingTime}/> 
+                <div className="col-12 col-md-4">
                     <label htmlFor="recipePreTime" className="newrecipe-form-label py-2">Preparation Time</label>
                     <RecipeTimePicker onSelectTime={updatePreparationTime} type='preparationTime'/>
                 </div>
-                <div className="col-12 col-md-6">
+                <div className="col-12 col-md-4">
                     <label htmlFor="recipeCookingTime" className="newrecipe-form-label py-2">Cooking Time</label>
                     <RecipeTimePicker onSelectTime={updateCookingTime} type='cookingTime'/>
-                </div>
+                </div>*/}
             </div>
-            
         </>
     )
 }

@@ -1,18 +1,18 @@
 import axios from "axios";
 import { useRef, useState } from "react";
-import { importedRecipe } from "../../../types/recipe";
+import { RecipeDraft } from "../../../types/recipe";
 import './upload-by-url-editor.scss';
 import Preview from "../Preview";
 import { useCreateRecipeByUrlMutation } from "../../../redux/recipe/recipeAiApiSlice";
 
 interface Props {
-    currRecipe: importedRecipe | undefined;
-    setCurrRecipe: React.Dispatch<React.SetStateAction<importedRecipe | undefined>>;
+    currRecipe: RecipeDraft;
+    updateData: (updates: Partial<RecipeDraft>) => void;
     isModalOpen: boolean;
     setIsModalOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-const UploadByUrlEditor = ({currRecipe, setCurrRecipe, isModalOpen, setIsModalOpen }: Props) => {
+const UploadByUrlEditor = ({currRecipe, updateData, isModalOpen, setIsModalOpen }: Props) => {
     const [recipeUrl, setRecipeUrl] = useState<string>('');
     const [createRecipeByUrl, { isLoading, isSuccess, error }] = useCreateRecipeByUrlMutation();
 
@@ -20,14 +20,15 @@ const UploadByUrlEditor = ({currRecipe, setCurrRecipe, isModalOpen, setIsModalOp
         if (recipeUrl) {
             try {
                 const res = await createRecipeByUrl(recipeUrl).unwrap();
-                setCurrRecipe({
+                const newRecipe = {
                     title: res.title,
                     servings: res.servings,
                     sourceName: 'image',
                     ingredients: res.ingredients,
                     steps: res.steps,
                     images: []
-                });
+                };
+                updateData(newRecipe);
                 setIsModalOpen(true);
             } catch (error) {
                 console.error('Upload failed:', error);
@@ -38,9 +39,9 @@ const UploadByUrlEditor = ({currRecipe, setCurrRecipe, isModalOpen, setIsModalOp
     return (
         <div className="d-flex justify-content-center">
             <div className="row col-10">
-                <div className="input-group mb-3">
-                    <input type="text" className="form-control" placeholder="Enter Recipe URL" aria-label="Enter Recipe URL" aria-describedby="button-addon2" value={recipeUrl} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRecipeUrl(e.target.value)} />
-                    <button className="btn btn-outline-secondary" type="button" id="button-addon2" onClick={handleUrlUpload}>Get the Recipe</button>
+                <div className="input-group mb-3 px-0">
+                    <input type="text" className="form-control border-0" placeholder="Enter Recipe URL" aria-label="Enter Recipe URL" aria-describedby="button-addon2" value={recipeUrl} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRecipeUrl(e.target.value)} />
+                    <button className="btn btn-lg btn-sunny" type="button" id="button-addon2" onClick={handleUrlUpload}>Get the Recipe</button>
                 </div>
             </div>
             {

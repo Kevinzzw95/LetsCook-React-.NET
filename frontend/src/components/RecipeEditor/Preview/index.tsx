@@ -1,7 +1,7 @@
 import './preview.scss'
-import { importedRecipe } from '../../../types/recipe';
+import { RecipeDraft } from '../../../types/recipe';
  
-const Preview = (recipe: importedRecipe) => {
+const Preview = (recipe: RecipeDraft) => {
  
     return (
         <>

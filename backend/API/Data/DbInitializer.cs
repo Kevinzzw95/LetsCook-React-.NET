@@ -33,6 +33,38 @@ namespace API.Data
 
             if (context.Recipes.Any()) return;
 
+            if (!context.ShoppingLists.Any())
+            {
+                var shoppingLists = new Entity.ShoppingList[]
+                {
+                    new Entity.ShoppingList
+                    {
+                        Id = 0001,
+                        UserId = "0001",
+                        Items = new List<ShoppingItem>
+                        {
+                            new ShoppingItem
+                            {
+                                Ingredient = new Entity.Ingredient
+                                {
+                                    Id = 1111,
+                                    Name = "tomato",
+                                    Image = "tomato.jpg"
+                                },
+                                Amount = "1",
+                                Unit = "g",
+                                Store = "Costco",
+                                IsBought = false
+                            }
+                        },
+                        ClientSecret = "1" 
+                    }
+                };
+
+                context.ShoppingLists.AddRange(shoppingLists);
+                context.SaveChanges();
+            }
+
             // First seed ingredients if empty
             if (!context.Ingredients.Any())
             {
@@ -163,21 +195,21 @@ namespace API.Data
                                 ""Id"": 1001,
                                 ""Consistency"": ""solid"",
                                 ""Original"": ""8 oz fresh mozzarella"",
-                                ""Amount"": 8.0,
+                                ""Amount"": ""8.0"",
                                 ""Unit"": ""oz""
                             },
                             {
                                 ""Id"": 11529,
                                 ""Consistency"": ""solid"",
                                 ""Original"": ""2 ripe tomatoes"",
-                                ""Amount"": 2.0,
+                                ""Amount"": ""2.0"",
                                 ""Unit"": """"
                             },
                             {
                                 ""Id"": 2044,
                                 ""Consistency"": ""solid"",
                                 ""Original"": ""Fresh basil leaves"",
-                                ""Amount"": 6.0,
+                                ""Amount"": ""6.0"",
                                 ""Unit"": ""leaves""
                             }
                         ]",
@@ -227,14 +259,14 @@ namespace API.Data
                                 ""Id"": 15076,
                                 ""Consistency"": ""solid"",
                                 ""Original"": ""2 6-oz salmon fillets"",
-                                ""Amount"": 2.0,
+                                ""Amount"": ""2.0"",
                                 ""Unit"": ""fillet""
                             },
                             {
                                 ""Id"": 20444,
                                 ""Consistency"": ""solid"",
                                 ""Original"": ""1 cup rice"",
-                                ""Amount"": 1.0,
+                                ""Amount"": ""1.0"",
                                 ""Unit"": ""cup""
                             }
                         ]",

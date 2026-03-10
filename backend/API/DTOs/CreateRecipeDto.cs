@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
+using API.Entity;
 
 namespace API.DTOs
 {
@@ -20,11 +21,11 @@ namespace API.DTOs
         public string Cuisine { get; set; }
         public List<string> Diets { get; set; }
         [Required]
-        public List<string> InstructionsRaw { get; set; }
+        public string Steps { get; set; }
         public string DishType { get; set; }
         public string Summary { get; set; }
         public string UserId { get; set; }
         [Required]
-        public string[] Ingredients { get; set; }
+        public string Ingredients { get; set; }
     }
 }

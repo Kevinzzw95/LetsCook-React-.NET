@@ -1,9 +1,9 @@
-import { importedRecipe } from "../../types/recipe";
+import { RecipeDraft } from "../../types/recipe";
 import { aiApiSlice } from "../api/aiApiSlice";
 
 export const recipeAiApiSlice = aiApiSlice.injectEndpoints({
     endpoints: builder => ({
-        uploadImages: builder.mutation<importedRecipe, File[]>({
+        uploadImages: builder.mutation<RecipeDraft, File[]>({
             query: (files) => {
                 const formData = new FormData();
                 files.forEach((file, index) => {
@@ -18,7 +18,7 @@ export const recipeAiApiSlice = aiApiSlice.injectEndpoints({
             },
         }),
         
-        createRecipeByUrl: builder.mutation<importedRecipe, string>({
+        createRecipeByUrl: builder.mutation<RecipeDraft, string>({
             query: (recipeUrl) => {
         
                 return {  
