@@ -4,6 +4,7 @@ using API.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace API.Controllers
 {
@@ -28,6 +29,7 @@ namespace API.Controllers
 
             return new UserDto
             {
+                Username = user.UserName,
                 Email = user.Email,
                 Token = await _tokenService.GenerateToken(user)
             };
@@ -56,6 +58,8 @@ namespace API.Controllers
 
             return Ok(new UserDto
             {
+                Username = user.UserName,
+                Email = user.Email,
                 Token = newAccessToken,
                 RefreshToken = newRefreshToken
             });
@@ -87,13 +91,72 @@ namespace API.Controllers
         [HttpGet("currentUser")]
         public async Task<ActionResult<UserDto>> GetCurrentUser()
         {
-            var user = await _userManager.FindByNameAsync(User.Identity.Name);
+            var user = await _userManager.FindByIdAsync(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
             return new UserDto
             {
+                Username = user.UserName,
                 Email = user.Email,
                 Token = await _tokenService.GenerateToken(user)
             };
+        }
+
+        [Authorize]
+        [HttpPut("profile")]
+        public async Task<ActionResult<UserDto>> UpdateProfile(UpdateProfileDto updateProfileDto)
+        {
+            var user = await _userManager.FindByIdAsync(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            user.UserName = updateProfileDto.Username;
+            user.Email = updateProfileDto.Email;
+
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                foreach (var error in updateResult.Errors)
+                {
+                    ModelState.AddModelError(error.Code, error.Description);
+                }
+
+                return ValidationProblem();
+            }
+
+            if (!string.IsNullOrWhiteSpace(updateProfileDto.NewPassword))
+            {
+                if (string.IsNullOrWhiteSpace(updateProfileDto.CurrentPassword))
+                {
+                    ModelState.AddModelError("CurrentPassword", "Current password is required to set a new password.");
+                    return ValidationProblem();
+                }
+
+                var passwordResult = await _userManager.ChangePasswordAsync(
+                    user,
+                    updateProfileDto.CurrentPassword,
+                    updateProfileDto.NewPassword
+                );
+
+                if (!passwordResult.Succeeded)
+                {
+                    foreach (var error in passwordResult.Errors)
+                    {
+                        ModelState.AddModelError(error.Code, error.Description);
+                    }
+
+                    return ValidationProblem();
+                }
+            }
+
+            return Ok(new UserDto
+            {
+                Username = user.UserName,
+                Email = user.Email,
+                Token = await _tokenService.GenerateToken(user),
+                RefreshToken = user.RefreshToken
+            });
         }
     }
 }

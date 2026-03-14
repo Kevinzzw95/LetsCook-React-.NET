@@ -7,6 +7,7 @@ namespace API.DTOs
 {
     public class UserDto
     {
+        public string Username { set; get; }
         public string Email { set; get; }
         public string Token { set; get; }
         public string RefreshToken { get; set; }

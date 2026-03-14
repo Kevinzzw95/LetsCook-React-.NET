@@ -7,9 +7,13 @@ import classnames from 'classnames';
 import { faUser } from "@fortawesome/free-regular-svg-icons";
 import { Link } from "react-router-dom";
 import AddRecipeOptions from "../AddRecipeOptions";
-import { BookOpen, PlusCircle, ShoppingCart, User } from "lucide-react";
+import { BookOpen, CalendarDays, PlusCircle, ShoppingCart, User } from "lucide-react";
+import { useSelector } from "react-redux";
+import { selectCurrentToken, selectCurrentUser } from "../../redux/auth/authSlice";
 
 const Header = () => {
+    const token = useSelector(selectCurrentToken);
+    const currentUser = useSelector(selectCurrentUser);
 
     const [isOpenMobileNav, setIsToggleMobileNav] = useState<boolean>(false);
     const [activeDropdowns, setActiveDropdowns] = useState<number[]>([]);
@@ -77,14 +81,14 @@ const Header = () => {
                     <h1 className="sitename">Yummy</h1>
                 </a>
 
-                <form className="search-form d-flex flex-grow-1 order-2">
+                {/* <form className="search-form d-flex flex-grow-1 order-2">
                     <div className="input-group">
                         <input type="text" className="form-control search-input" placeholder="Enter ingredirnts or recipe names" aria-label="Recipient's username" aria-describedby="button-addon2" />
                         <button className="btn btn-search" type="button" id="button-addon2">
                             <FontAwesomeIcon icon={faSearch} />
                         </button>
                     </div>
-                </form>
+                </form> */}
 
                 <Link 
                     className="btn btn-link text-decoration-none text-dark fw-medium d-flex align-items-center gap-2 px-2 hover-scale order-2"
@@ -92,6 +96,14 @@ const Header = () => {
                 >
                     <BookOpen size={18} className="text-secondary" />
                     <span className="d-none d-sm-inline">Recipes</span>
+                </Link>
+
+                <Link
+                    className="btn btn-link text-decoration-none text-dark fw-medium d-flex align-items-center gap-2 px-2 hover-scale order-2"
+                    to={"/meal-plans/"}
+                >
+                    <CalendarDays size={18} className="text-secondary" />
+                    <span className="d-none d-sm-inline">Meal Plans</span>
                 </Link>
 
                 <Link
@@ -111,7 +123,17 @@ const Header = () => {
                     </button>
                     <AddRecipeOptions />
                 </div>
-                <Link className="order-2 icon-circle bg-warning text-white rounded-circle" to={"/login"}><User size={16} /></Link>
+                {token && currentUser ? (
+                    <Link
+                        className="btn btn-link text-decoration-none text-dark fw-medium d-flex align-items-center gap-2 px-2 hover-scale order-2"
+                        to={"/profile/"}
+                    >
+                        <User size={18} className="text-secondary" />
+                        <span>{`Hi, ${currentUser}`}</span>
+                    </Link>
+                ) : (
+                    <Link className="order-2 icon-circle bg-warning text-white rounded-circle" to={"/login"}><User size={16} /></Link>
+                )}
 
 
             </div>

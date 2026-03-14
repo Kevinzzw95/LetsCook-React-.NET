@@ -2,7 +2,8 @@
 export interface loginRes {
     token: string;
     email: string;
-    username:string;
+    username: string;
+    refreshToken?: string;
 }
 
 export interface userSliceState {
@@ -18,4 +19,14 @@ export interface postAuth {
 
 export interface AuthResponse {
   token: string;
+  username?: string;
+  email?: string;
+  refreshToken?: string;
+}
+
+export interface UpdateProfilePayload {
+    username: string;
+    email: string;
+    currentPassword?: string;
+    newPassword?: string;
 }

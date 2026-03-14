@@ -1,7 +1,7 @@
 import { faCirclePlus, faXmark } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import './image-editor.scss';
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useDropzone } from 'react-dropzone';
 import { RecipeDraft } from "../../../types/recipe";
 import { Control, useFormContext, UseFormRegister } from "react-hook-form";
@@ -19,7 +19,9 @@ const ImageEditor = ({currRecipe, updateData, control, register}: Props) => {
     const watchImages = watch("images", []);
 
     const handleRemoveImage = (targetIndex: number) => {
-        updateData({ images: currRecipe.images!.filter((_, index) => index !== targetIndex) });
+        const nextImages = currRecipe.images!.filter((_, index) => index !== targetIndex);
+        setValue("images", nextImages);
+        updateData({ images: nextImages });
     };  
 
     const onDrop = (acceptedFiles: File[]) => {
@@ -38,6 +40,10 @@ const ImageEditor = ({currRecipe, updateData, control, register}: Props) => {
             'image/png': []
         }
     });
+
+    useEffect(() => {
+        register("images");
+    }, [register]);
 
     useEffect(() => {
         if(currRecipe?.images) {
@@ -94,7 +100,13 @@ const ImageEditor = ({currRecipe, updateData, control, register}: Props) => {
                                 </div>
                             </div>
                         </div>
-                        {file && <img src={URL.createObjectURL(file)} alt="Selected preview" className="object-fit-cover w-100 border rounded w-100" />}
+                        {file && (
+                            <img
+                                src={typeof file === 'string' ? file : URL.createObjectURL(file)}
+                                alt="Selected preview"
+                                className="object-fit-cover w-100 border rounded w-100"
+                            />
+                        )}
                     </div>
                 )
             }

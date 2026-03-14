@@ -7,6 +7,8 @@ import Login from "../pages/Login";
 import Registration from "../pages/Registration";
 import App from "../App";
 import ShoppingList from "../pages/ShoppingList";
+import MealPlans from "../pages/MealPlans";
+import Profile from "../pages/Profile";
 
 export const router = createBrowserRouter([
    { 
@@ -17,15 +19,17 @@ export const router = createBrowserRouter([
                 element: <RequireAuth />,
                 children: [
                     { path: '/new-recipe/', element: <EditRecipe />},
+                    { path: '/edit-recipe/:id', element: <EditRecipe />},
                     { path: '/recipe-list/', element: <RecipeList />},
-                    { path: '/shopping-list/', element: <ShoppingList />}
+                    { path: '/shopping-list/', element: <ShoppingList />},
+                    { path: '/meal-plans/', element: <MealPlans />},
+                    { path: '/profile/', element: <Profile />},
+                    { path: '/recipe-details/:id', element: <RecipeDetails />},
+                    { path: '/new-recipe/', element: <EditRecipe />}
                 ],
             },
-            //{ path: '/recipe-list/', element: <RecipeList />},
-            { path: '/recipe-details/:id', element: <RecipeDetails />},
             { path: '/login/', element: <Login />},
             { path: '/registration/', element: <Registration />},
-            { path: '/new-recipe/', element: <EditRecipe />},
         ]
     }
 ]);

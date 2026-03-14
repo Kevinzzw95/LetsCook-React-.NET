@@ -1,5 +1,5 @@
 import { FieldValues } from "react-hook-form";
-import { loginRes, postAuth } from "../../types/user";
+import { loginRes, postAuth, UpdateProfilePayload } from "../../types/user";
 import { apiSlice } from "../api/apiSlice";
 
 export const authApiSlice = apiSlice.injectEndpoints({
@@ -17,12 +17,27 @@ export const authApiSlice = apiSlice.injectEndpoints({
               method: 'POST',
               body: {...registerData}  
             }),
-		})
+		}),
+        getCurrentUser: builder.query<loginRes, void>({
+            query: () => ({
+                url: 'account/currentUser/',
+                method: 'GET'
+            })
+        }),
+        updateProfile: builder.mutation<loginRes, UpdateProfilePayload>({
+            query: payload => ({
+                url: 'account/profile/',
+                method: 'PUT',
+                body: payload
+            })
+        })
         
     })
 })
 
 export const {
 	useLoginMutation,
-	useUserRegisterMutation
+	useUserRegisterMutation,
+    useGetCurrentUserQuery,
+    useUpdateProfileMutation
 } = authApiSlice

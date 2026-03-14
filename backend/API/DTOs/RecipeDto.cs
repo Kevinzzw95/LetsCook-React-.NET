@@ -12,6 +12,7 @@ namespace API.DTOs
         public string Title { get; set; }
         public List<string> ImageUrls { get; set; }
         public int Servings { get; set; }
+        public int PreparationMinutes { get; set; }
         public int CookingMinutes { get; set; }
         public string SourceName { get; set; }
         public string SourceUrl { get; set; }

@@ -1,0 +1,321 @@
+.meal-plans-page {
+    .meal-plans-hero {
+        background:
+            radial-gradient(circle at top right, rgba(251, 191, 36, 0.2), transparent 28%),
+            linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(255, 247, 237, 0.94));
+    }
+
+    .meal-plans-pill {
+        padding: 0.55rem 0.9rem;
+        border-radius: 999px;
+        background: rgba(251, 146, 60, 0.12);
+        color: #c2410c;
+        font-weight: 700;
+    }
+
+    .meal-plans-summary {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+        min-width: min(100%, 320px);
+    }
+
+    .summary-card {
+        padding: 1.1rem 1.2rem;
+        border-radius: 1.25rem;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid rgba(251, 146, 60, 0.12);
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        @media (max-width: 767px) {
+            padding: 10px;
+            flex-direction: row;
+            gap: 0.5rem;
+        }
+    }
+
+    .summary-value {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #111827;
+        @media (max-width: 767px) {
+            font-size: 1.5rem;
+        }
+    }
+
+    .summary-label {
+        color: #6b7280;
+        font-size: 0.95rem;
+    }
+
+    .month-nav-btn {
+        width: 42px;
+        height: 42px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .calendar-weekdays,
+    .calendar-grid {
+        display: grid;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        gap: 0.5rem;
+    }
+
+    .calendar-weekday {
+        text-align: center;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #6b7280;
+        font-weight: 700;
+    }
+
+    .calendar-day {
+        border: 1px solid rgba(251, 146, 60, 0.12);
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(255, 250, 245, 0.96));
+        border-radius: 1.25rem;
+        padding: 0.5rem;
+        text-align: left;
+        min-height: 185px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+    }
+
+    .calendar-day:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 18px 35px -20px rgba(249, 115, 22, 0.55);
+        border-color: rgba(249, 115, 22, 0.28);
+    }
+
+    .calendar-day-selected {
+        border-color: rgba(249, 115, 22, 0.45);
+        box-shadow: 0 18px 40px -28px rgba(249, 115, 22, 0.65);
+    }
+
+    .calendar-day-muted {
+        opacity: 0.55;
+    }
+
+    .calendar-day-weekday {
+        margin-bottom: 0.5rem;
+        font-size: 0.76rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #9a3412;
+        font-weight: 700;
+    }
+
+    .calendar-select-btn {
+        width: 28px;
+        height: 28px;
+        border: 1px solid rgba(251, 146, 60, 0.18);
+        border-radius: 999px;
+        background: #fff;
+        color: #9ca3af;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+
+    .calendar-select-btn-active {
+        background: linear-gradient(to right, #fbbf24, #fb923c);
+        border-color: transparent;
+        color: #fff;
+    }
+
+    .calendar-date-number {
+        font-weight: 800;
+        color: #111827;
+    }
+
+    .calendar-slot-count {
+        font-size: 0.75rem;
+        color: #6b7280;
+    }
+
+    .calendar-slot-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+        @media (max-width: 767px) {
+            gap: 0.2rem;
+        }
+    }
+
+    .calendar-slot-preview {
+        border-radius: 0.9rem;
+        padding: 0.55rem 0.65rem;
+        background: #fff;
+        border: 1px dashed rgba(251, 146, 60, 0.2);
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+        font-size: 0.8rem;
+        color: #6b7280;
+
+        strong {
+            color: #111827;
+            font-size: 0.82rem;
+            font-weight: 700;
+            line-height: 1.25;
+        }
+
+        small {
+            color: #6b7280;
+            line-height: 1.35;
+        }
+    }
+
+    .calendar-slot-filled {
+        background: linear-gradient(135deg, rgba(255, 247, 237, 0.95), rgba(254, 215, 170, 0.45));
+        border-style: solid;
+    }
+
+    .planner-sidebar {
+        position: sticky;
+        top: 96px;
+    }
+
+    .meal-type-toggle {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.6rem;
+    }
+
+    .empty-day-state {
+        padding: 1.25rem;
+        border-radius: 1.25rem;
+        text-align: center;
+        background: #fff7ed;
+        color: #9a3412;
+        display: grid;
+        gap: 0.6rem;
+        justify-items: center;
+    }
+
+    .meal-slot-section {
+        padding: 1rem;
+        border-radius: 1.25rem;
+        background: rgba(255, 247, 237, 0.6);
+        border: 1px solid rgba(251, 146, 60, 0.12);
+    }
+
+    .meal-slot-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 78px;
+        padding: 0.35rem 0.7rem;
+        border-radius: 999px;
+        background: #fff;
+        color: #9a3412;
+        font-size: 0.78rem;
+        font-weight: 700;
+    }
+
+    .empty-slot-state {
+        padding: 0.85rem 1rem;
+        border-radius: 1rem;
+        background: #fff;
+        color: #6b7280;
+        border: 1px dashed rgba(251, 146, 60, 0.18);
+        font-size: 0.9rem;
+    }
+
+    .planned-meal-card {
+        display: grid;
+        grid-template-columns: 88px minmax(0, 1fr);
+        gap: 0.9rem;
+        padding: 0.9rem;
+        border-radius: 1.2rem;
+        background: rgba(255, 255, 255, 0.92);
+        border: 1px solid rgba(251, 146, 60, 0.14);
+    }
+
+    .planned-meal-image {
+        width: 88px;
+        height: 88px;
+        border-radius: 1rem;
+        object-fit: cover;
+        background: #fff7ed;
+    }
+
+    .planned-meal-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #f97316;
+    }
+
+    .planned-meal-body {
+        min-width: 0;
+    }
+
+    .planned-meal-type {
+        display: inline-block;
+        margin-bottom: 0.25rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: #9a3412;
+    }
+
+    .planned-meal-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        color: #6b7280;
+        font-size: 0.85rem;
+
+        span {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+    }
+
+    @media (max-width: 991px) {
+        .calendar-weekdays,
+        .calendar-grid {
+            gap: 0.55rem;
+        }
+
+        .calendar-day {
+            min-height: 160px;
+            padding: 0.75rem;
+        }
+
+        .planner-sidebar {
+            position: static;
+        }
+    }
+
+    @media (max-width: 767px) {
+        .calendar-weekdays {
+            display: none;
+        }
+
+        .calendar-grid {
+            display: flex;
+            overflow-x: auto;
+            scroll-snap-type: x mandatory;
+            gap: 0.9rem;
+            padding-bottom: 0.5rem;
+            scrollbar-width: thin;
+        }
+
+        .calendar-day {
+            min-height: 220px;
+            flex: 0 0 min(82vw, 320px);
+            scroll-snap-align: start;
+            max-width: 120px;
+        }
+
+        .meal-type-toggle {
+            grid-template-columns: 1fr;
+        }
+    }
+}

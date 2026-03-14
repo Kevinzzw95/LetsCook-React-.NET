@@ -16,8 +16,9 @@ namespace API.Extensions
             {
                 Id = recipe.Id,
                 Title = recipe.Title,
-                //Image = recipe.Image,
+                ImageUrls = recipe.ImageInfo?.Values?.ToList() ?? [],
                 Servings = recipe.Servings,
+                PreparationMinutes = recipe.PreparationMinutes,
                 CookingMinutes = recipe.CookingMinutes,
                 SourceName = recipe.SourceName,
                 SourceUrl = recipe.SourceUrl,

@@ -27,7 +27,7 @@ const StepsEditor = ({currRecipe, updateData, control, register}: Props) => {
         control,
         name: "steps"
     });
-    const [ currStep, setCurrStep ] = useState<number>(currRecipe && currRecipe.steps.length || 0);
+    const [ currStep, setCurrStep ] = useState<number>(currRecipe && currRecipe.steps.length || 1);
 
     const handleAddStep = () => {
         setCurrStep(currStep + 1);
@@ -48,7 +48,7 @@ const StepsEditor = ({currRecipe, updateData, control, register}: Props) => {
     const updateStep = (id: string, value: string) => {
         updateData({
             steps: currRecipe.steps.map((s) =>
-                s.id === id ? { ...s, instruction: value } : s
+                s.id === id ? { ...s, description: value } : s
             ),
         });
     };

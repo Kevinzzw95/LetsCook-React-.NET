@@ -6,20 +6,22 @@ import { Step } from "./step";
 export interface recipeCommon {
     "id"?: string,
     "title": string,
-    "images": string[],
-    "imageType": string,
+    "imageUrls"?: string[],
+    "imageType"?: string,
     "servings": number,
     "readyInMinutes"?: number,
     "cookingMinutes"?: number,
     "preparationMinutes"?: number,
     "sourceName": string,
-    "sourceUrl": string,
-    "cuisines": string,
-    "diets": string[],
+    "sourceUrl"?: string,
+    "cuisines"?: string,
+    "cuisine"?: string,
+    "diets"?: string[],
     "instructions": instruction[],
-    "dishTypes": string[],
+    "dishTypes"?: string[] | string,
+    "dishType"?: string,
     "extendedIngredients": Ingredient[],
-    "summary": string
+    "summary"?: string
 }
 
 export interface recipeSearchRes {
@@ -32,6 +34,7 @@ export interface recipeSearchRes {
 export interface RecipeDraft {
     title: string,
     servings: number,
+    preparationMinutes?: number,
     types?: string, 
     cuisines?: string,
     diets?: string,
@@ -39,7 +42,7 @@ export interface RecipeDraft {
     ingredients: Ingredient[],
     steps: Step[],
     sourceName?: string,
-    images?: File[]
+    images?: (File | string)[]
 }
 
 export enum Tab {

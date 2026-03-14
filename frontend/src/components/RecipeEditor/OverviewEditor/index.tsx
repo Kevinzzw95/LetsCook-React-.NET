@@ -1,7 +1,6 @@
 import './overview-editor.scss'
 import { CATEGORIES } from '../../../constants';
-import RecipeTimePicker from '../../RecipeTimePicker';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { ErrorMessage } from "@hookform/error-message";
 import { RecipeDraft } from '../../../types/recipe';
@@ -14,25 +13,16 @@ type Props = {
 const OverviewEditor = ({currRecipe}: Props) => {
     const { register, setValue, formState: { errors }} = useFormContext();
 
-    const [preparationTime, setPreparationTime] = useState<number>(0);
-    const [cookingTime, setCookingTime] = useState<number>(0);
-
-    const updatePreparationTime = (hour: string, min: string) => {
-        setPreparationTime(Number(hour) * 60 + Number(min));
-    }
-
-    const updateCookingTime = (hour: string, min: string) => {
-        setCookingTime(Number(hour) * 60 + Number(min));
-    }
-
     useEffect(() => {
         setValue("title", currRecipe?.title);
         setValue("servings", currRecipe?.servings);
-    }, [currRecipe?.title, currRecipe?.servings]);
+        setValue("preparationMinutes", currRecipe?.preparationMinutes ?? 0);
+    }, [currRecipe?.title, currRecipe?.servings, currRecipe?.preparationMinutes, setValue]);
 
     useEffect(() => {
         setValue("servings", 1);
-    }, []);
+        setValue("preparationMinutes", 0);
+    }, [setValue]);
 
     return (
         <>
@@ -83,16 +73,18 @@ const OverviewEditor = ({currRecipe}: Props) => {
                         aria-describedby="recipeServings" 
                         onChange={(e) => setValue("servings", Number(e.target.value))} />
                 </div>
-                {/* <input {...register("preparationMinutes")} hidden value={preparationTime}/>
-                <input {...register("cookingMinutes")} hidden value={cookingTime}/> 
                 <div className="col-12 col-md-4">
-                    <label htmlFor="recipePreTime" className="newrecipe-form-label py-2">Preparation Time</label>
-                    <RecipeTimePicker onSelectTime={updatePreparationTime} type='preparationTime'/>
+                    <label htmlFor="recipePreparationMinutes" className="newrecipe-form-label py-2">Preparation Minutes</label>
+                    <input
+                        {...register("preparationMinutes")}
+                        type="number"
+                        min={0}
+                        className="form-control"
+                        id="recipePreparationMinutes"
+                        aria-describedby="recipePreparationMinutes"
+                        onChange={(e) => setValue("preparationMinutes", Number(e.target.value))}
+                    />
                 </div>
-                <div className="col-12 col-md-4">
-                    <label htmlFor="recipeCookingTime" className="newrecipe-form-label py-2">Cooking Time</label>
-                    <RecipeTimePicker onSelectTime={updateCookingTime} type='cookingTime'/>
-                </div>*/}
             </div>
         </>
     )

@@ -10,6 +10,7 @@ namespace API.Entity
         public string Title { get; set; }
         public Dictionary<string, string> ImageInfo { get; set; }
         public int Servings { get; set; }
+        public int PreparationMinutes { get; set; }
         public int CookingMinutes { get; set; }
         public string SourceName { get; set; }
         public string SourceUrl { get; set; }

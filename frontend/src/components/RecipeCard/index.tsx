@@ -15,7 +15,7 @@ const RecipeCard = ({ recipe } : Props) => {
             <div className="card h-100 border-0 shadow-sm rounded-4 overflow-hidden hover-scale">
                 <div className="position-relative" style={{ height: '200px' }}>
                 <img 
-                    src={recipe.images && recipe.images[0]} 
+                    src={recipe.imageUrls && recipe.imageUrls[0]} 
                     alt={recipe.title} 
                     className="w-100 h-100 object-fit-cover"
                 />

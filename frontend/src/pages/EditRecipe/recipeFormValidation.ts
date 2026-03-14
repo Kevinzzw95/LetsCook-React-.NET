@@ -7,7 +7,7 @@ export const validationSchema: ObjectSchema<RecipeDraft> = object({
 	types: string().optional(),
 	cuisines: string().optional(),
 	diets: string().optional(),
-	prepTime: number().min(0).optional(),
+	preparationMinutes: number().min(0).optional(),
 	steps: array().of(
 		object({
 			id: string().required(),
@@ -19,9 +19,11 @@ export const validationSchema: ObjectSchema<RecipeDraft> = object({
 	ingredients: array().of(
 		object({
 			id: string().required(),
-			amount: string().required(),
+			amount: string()
+				.transform((value) => value?.toString?.() ?? '')
+				.required(),
 			name: string().required(),
-			unit: string().required()
+			unit: string().transform((value) => value ?? '').optional().default('')
 		}),
 	).required().min(1),
 	images: array().optional()

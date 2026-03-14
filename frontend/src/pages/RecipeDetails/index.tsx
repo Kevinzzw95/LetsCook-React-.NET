@@ -1,12 +1,11 @@
 import ReactDOM from 'react-dom'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import './recipe-details.scss'
-import { useParams } from 'react-router';
+import { Link, useParams } from 'react-router-dom';
 import { faClock, faStar } from '@fortawesome/free-regular-svg-icons';
 import { faHeart, faComment, faList, faFire, faEgg, faBowlRice, faDroplet } from '@fortawesome/free-solid-svg-icons';
 import { useEffect, useState } from 'react';
 import { instruction } from '../../types/instruction';
-import agent from '../../redux/api/agent';
 import { useAddItemsToShoppingListMutation, useGetRecipeQuery } from '../../redux/recipe/recipeApiSlice';
 import { Clock, Plus, Users, Utensils } from 'lucide-react';
 import { Ingredient } from '../../types/ingredient';
@@ -451,20 +450,22 @@ const RecipeDetails = () => {
                         <div className="row g-4 mb-5">
                             <div className="col-lg-6">
                                 <div className="position-relative rounded-4 overflow-hidden shadow-sm" style={{ aspectRatio: '4/3' }}>
-                                    {/* {recipe.images.length > 0 ? (
-                                        <img src={recipe.images[0]} alt={recipe.title} className="w-100 h-100 object-fit-cover" />
+                                    {recipe.imageUrls &&  recipe.imageUrls.length > 0 ? (
+                                        <>
+                                            <img src={recipe.imageUrls[0]} alt={recipe.title} className="w-100 h-100 object-fit-cover" />
+                                            <div className="position-absolute bottom-0 start-0 w-100 p-3 bg-gradient-dark text-white d-flex gap-2 overflow-auto" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}>
+                                                {recipe.imageUrls.slice(1).map((img, idx) => (
+                                                    <div key={idx} className="rounded-2 overflow-hidden border border-white" style={{ width: '60px', height: '60px', flexShrink: 0 }}>
+                                                        <img src={img} className="w-100 h-100 object-fit-cover" alt="Thumbnail" />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </>
                                     ) : (
                                         <div className="w-100 h-100 bg-secondary-subtle d-flex align-items-center justify-content-center">
                                             <Utensils size={64} className="text-secondary opacity-25" />
                                         </div>
                                     )}
-                                    <div className="position-absolute bottom-0 start-0 w-100 p-3 bg-gradient-dark text-white d-flex gap-2 overflow-auto" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}>
-                                        {recipe.images.slice(1).map((img, idx) => (
-                                            <div key={idx} className="rounded-2 overflow-hidden border border-white" style={{ width: '60px', height: '60px', flexShrink: 0 }}>
-                                                <img src={img} className="w-100 h-100 object-fit-cover" alt="Thumbnail" />
-                                            </div>
-                                        ))}
-                                    </div> */}
                                     <div className="w-100 h-100 bg-secondary-subtle d-flex align-items-center justify-content-center">
                                             <Utensils size={64} className="text-secondary opacity-25" />
                                         </div>
@@ -478,6 +479,11 @@ const RecipeDetails = () => {
                                     </span>
                                 </div>
                                 <h1 className="display-5 fw-bold text-dark mb-3">{recipe.title || 'Untitled Recipe'}</h1>
+                                <div className="mb-3">
+                                    <Link to={`/edit-recipe/${recipe.id}`} className="btn btn-outline-sunny rounded-pill fw-medium">
+                                        Edit Recipe
+                                    </Link>
+                                </div>
                                 {/* <p className="lead text-secondary mb-4">{recipe.description || 'No description available for this delicious recipe.'}</p> */}
                                 
                                 <div className="d-flex flex-wrap gap-4 pt-3 border-top">
@@ -537,10 +543,10 @@ const RecipeDetails = () => {
                                     <h2>Ingredients</h2>
                                     <span className='d-flex justify-content-between'>
                                         <span className='px-4'>Servings: { servings }</span>
-                                        <div className="btn-group btn-group-sm btn-servings" role="group" aria-label="Small button group">
+                                        {/* <div className="btn-group btn-group-sm btn-servings" role="group" aria-label="Small button group">
                                             <button type="button" className="btn btn-secondary" onClick={reduceServings}>-</button>
                                             <button type="button" className="btn btn-secondary" onClick={() => setServings(servings + 1)}>+</button>
-                                        </div>
+                                        </div> */}
                                     </span>
                                 </div>
                                 <div className='details-content d-md-flex justify-content-md-between w-100'>
@@ -550,7 +556,7 @@ const RecipeDetails = () => {
                                                 recipe?.extendedIngredients && recipe.extendedIngredients.map((ingredient, index) =>
                                                     <li className='ingredient-item d-flex justify-content-between' key={index}>
                                                         <span className='ingredient-name'>{ ingredient.name }</span>
-                                                        {/* <span>{ (ingredient.measures.metric.amount * servings).toFixed(0) } { ingredient.measures.metric.unitShort }</span> */}
+                                                        <span>{ingredient.amount} { ingredient.unit }</span>
                                                         <button onClick={() => handleAddItemToShoppingList(ingredient)} className='btn btn-sm border-0 rounded-pill px-3 d-flex align-items-center gap-2 fw-medium shadow-sm btn-sunny'><Plus size={16}/>Shopping List</button>
                                                     </li>
                                             )}

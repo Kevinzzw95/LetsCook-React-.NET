@@ -36,11 +36,12 @@ const LoginForm = () => {
 
 	const handleSubmitData = async (data: postAuth) => {
 		try {
-			const user = getValues('username');
 			const result = await login(data).unwrap();
-			const token = result.token;
-			console.log(result)
-			dispatch(setCredentials({ token: token, user: user }));
+			dispatch(setCredentials({
+				token: result.token,
+				user: result.username,
+				refreshToken: result.refreshToken ?? null
+			}));
 			console.log('Login successfully:', result);
 			navigate(location.state?.from || '/recipe-list');
 		} catch (err) {

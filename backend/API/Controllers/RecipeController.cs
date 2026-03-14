@@ -15,6 +15,8 @@ using System.Text.Json;
 using API.Services;
 using System.Text.RegularExpressions;
 using CloudinaryDotNet.Actions;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace API.Controllers
 {
@@ -31,10 +33,19 @@ namespace API.Controllers
             this._imageService = _imageService;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<ActionResult<List<Recipe>>> GetRecipes()
         {
-            var recipes = await _context.Recipes.ToListAsync();
+            var userId = await GetUserIdAsync();
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            var recipes = await _context.Recipes
+                .Where(recipe => recipe.UserId == userId)
+                .ToListAsync();
             var recipeSimpleList = from recipe in recipes
                                 select new RecipeDto
                                 {
@@ -42,6 +53,7 @@ namespace API.Controllers
                                     Title = recipe.Title,
                                     ImageUrls = recipe.ImageInfo?.Values?.ToList(),
                                     Servings = recipe.Servings,
+                                    PreparationMinutes = recipe.PreparationMinutes,
                                     CookingMinutes = recipe.CookingMinutes,
 
                                     SourceName = recipe.SourceName,
@@ -87,64 +99,20 @@ namespace API.Controllers
             return Ok(recipeDto);
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<ActionResult<RecipeDto>> CreateRecipe([FromForm] CreateRecipeDto createRecipeDto)
         {
-            var recipe = _mapper.Map<Recipe>(createRecipeDto);
-
-            if (createRecipeDto.Images != null)
+            var userId = await GetUserIdAsync();
+            if (string.IsNullOrEmpty(userId))
             {
-                recipe.ImageInfo = [];
-                foreach(var image in createRecipeDto.Images) {
-                    var imageResult = await _imageService.AddImageAsync(image);
-
-                    if (imageResult.Error != null) return BadRequest(new ProblemDetails { Title = imageResult.Error.Message });
-
-                    recipe.ImageInfo.Add(imageResult.PublicId, imageResult.SecureUrl.ToString());
-                }     
+                return Unauthorized();
             }
 
-            var stepsObject = JsonSerializer.Deserialize<List<StepDto>>(
-                createRecipeDto.Steps,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-            );
-            recipe.Instructions =
-            [
-                new Instruction {
-                    Steps = stepsObject.Select(step => new Step {
-                        StepNumber = step.StepNumber,
-                        Description = step.Description
-                    }).ToList()
-                }
-            ];
+            var recipe = _mapper.Map<Recipe>(createRecipeDto);
+            recipe.UserId = userId;
 
-            var recipeIngredients = new List<object>();
-            var ingredientsObject = JsonSerializer.Deserialize<List<CreateIngredientDto>>(
-                createRecipeDto.Ingredients,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-            );
-            foreach (var ingredient in ingredientsObject) {
-                
-                var existingIngredient = await _context.Ingredients.FirstOrDefaultAsync(i => i.Name == ingredient.Name);
-                if(existingIngredient == null) {
-                    var newIngredient = new Ingredient {
-                        Name = ingredient.Name
-                    };
-                    _context.Ingredients.Add(newIngredient);
-                    var ingredientResult = await _context.SaveChangesAsync() > 0;
-                    if(ingredientResult) {
-                        existingIngredient = newIngredient;
-                    }    
-                }
-                var recipeIngredient = new ExtendedIngredient{
-                    Id = existingIngredient.Id,
-                    Amount = ingredient.Amount,
-                    Unit = ingredient.Unit
-                };
-                recipeIngredients.Add(recipeIngredient);
-            }
-
-            recipe.ExtendedIngredients = JsonSerializer.Serialize(recipeIngredients);
+            await ApplyRecipeFormData(recipe, createRecipeDto);
 
             _context.Recipes.Add(recipe);
 
@@ -153,6 +121,43 @@ namespace API.Controllers
             if (result) return CreatedAtRoute("GetRecipe", new { Id = recipe.Id }, recipe.Id);
 
             return BadRequest(new ProblemDetails { Title = "Problem creating new recipe" });
+        }
+
+        [Authorize]
+        [HttpPut("{id}")]
+        public async Task<ActionResult<long>> UpdateRecipe(long id, [FromForm] CreateRecipeDto createRecipeDto)
+        {
+            var userId = await GetUserIdAsync();
+            if (string.IsNullOrEmpty(userId))
+            {
+                return Unauthorized();
+            }
+
+            var recipe = await _context.Recipes
+                .Include(r => r.Instructions)
+                .ThenInclude(i => i.Steps)
+                .FirstOrDefaultAsync(r => r.Id == id && r.UserId == userId);
+
+            if (recipe == null) return NotFound();
+
+            recipe.Title = createRecipeDto.Title;
+            recipe.Servings = createRecipeDto.Servings;
+            recipe.PreparationMinutes = createRecipeDto.PreparationMinutes;
+            recipe.CookingMinutes = createRecipeDto.CookingMinutes;
+            recipe.SourceName = createRecipeDto.SourceName;
+            recipe.SourceUrl = createRecipeDto.SourceUrl;
+            recipe.Cuisine = createRecipeDto.Cuisine;
+            recipe.DishType = createRecipeDto.DishType;
+            recipe.Summary = createRecipeDto.Summary;
+            recipe.Diets = createRecipeDto.Diets;
+            recipe.UpdatedAt = DateTime.UtcNow;
+
+            await ApplyRecipeFormData(recipe, createRecipeDto);
+
+            var result = await _context.SaveChangesAsync() > 0;
+            if (result) return Ok(recipe.Id);
+
+            return BadRequest(new ProblemDetails { Title = "Problem updating recipe" });
         }
 
         private async Task<Recipe> RetrieveRecipe(long recipeId)
@@ -177,6 +182,107 @@ namespace API.Controllers
             }
 
             return ("", "", input);
+        }
+
+        private async Task<string?> GetUserIdAsync()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(userId))
+            {
+                return userId;
+            }
+
+            var username = User.FindFirstValue(ClaimTypes.Name);
+            if (string.IsNullOrEmpty(username))
+            {
+                return null;
+            }
+
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.UserName == username);
+            return user?.Id;
+        }
+
+        private async Task ApplyRecipeFormData(Recipe recipe, CreateRecipeDto createRecipeDto)
+        {
+            recipe.ImageInfo ??= [];
+            var keptImageUrls = JsonSerializer.Deserialize<List<string>>(
+                createRecipeDto.ExistingImageUrls ?? "[]",
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            ) ?? [];
+
+            var removedImageKeys = recipe.ImageInfo
+                .Where(image => !keptImageUrls.Contains(image.Value))
+                .Select(image => image.Key)
+                .ToList();
+
+            foreach (var imageKey in removedImageKeys)
+            {
+                var deleteResult = await _imageService.DeleteImageAsync(imageKey);
+                if (deleteResult.Error != null)
+                {
+                    throw new InvalidOperationException(deleteResult.Error.Message);
+                }
+
+                recipe.ImageInfo.Remove(imageKey);
+            }
+
+            if (createRecipeDto.Images != null)
+            {
+                foreach (var image in createRecipeDto.Images)
+                {
+                    var imageResult = await _imageService.AddImageAsync(image);
+
+                    if (imageResult.Error != null) throw new InvalidOperationException(imageResult.Error.Message);
+
+                    recipe.ImageInfo[imageResult.PublicId] = imageResult.SecureUrl.ToString();
+                }
+            }
+
+            var stepsObject = JsonSerializer.Deserialize<List<StepDto>>(
+                createRecipeDto.Steps,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            ) ?? [];
+
+            recipe.Instructions =
+            [
+                new Instruction {
+                    Steps = stepsObject.Select(step => new Step {
+                        StepNumber = step.StepNumber,
+                        Description = step.Description
+                    }).ToList()
+                }
+            ];
+
+            var recipeIngredients = new List<object>();
+            var ingredientsObject = JsonSerializer.Deserialize<List<CreateIngredientDto>>(
+                createRecipeDto.Ingredients,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            ) ?? [];
+
+            foreach (var ingredient in ingredientsObject)
+            {
+                var existingIngredient = await _context.Ingredients.FirstOrDefaultAsync(i => i.Name == ingredient.Name);
+                if (existingIngredient == null)
+                {
+                    var newIngredient = new Ingredient
+                    {
+                        Name = ingredient.Name
+                    };
+                    _context.Ingredients.Add(newIngredient);
+                    await _context.SaveChangesAsync();
+                    existingIngredient = newIngredient;
+                }
+
+                var recipeIngredient = new ExtendedIngredient
+                {
+                    Id = existingIngredient.Id,
+                    Amount = ingredient.Amount,
+                    Unit = ingredient.Unit
+                };
+                recipeIngredients.Add(recipeIngredient);
+            }
+
+            recipe.ExtendedIngredients = JsonSerializer.Serialize(recipeIngredients);
         }
     }
 }

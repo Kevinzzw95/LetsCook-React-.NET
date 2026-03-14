@@ -13,9 +13,10 @@ import { RecipeDraft, recipeCommon, Tab } from '../../types/recipe';
 import ScanRecipeEditor from '../../components/RecipeEditor/ScanRecipeEditor';
 import RecipeDetails from '../RecipeDetails';
 import Preview from '../../components/RecipeEditor/Preview';
-import { useCreateRecipeMutation } from '../../redux/recipe/recipeApiSlice';
+import { useCreateRecipeMutation, useGetRecipeQuery, useUpdateRecipeMutation } from '../../redux/recipe/recipeApiSlice';
 import UploadByUrlEditor from '../../components/RecipeEditor/UploadByUrlEditor';
 import { BookOpen, CheckCircle2, ChevronRight, ChefHat, Image as ImageIcon, List } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
 
 interface Props {
     recipe?: recipeCommon;
@@ -23,6 +24,9 @@ interface Props {
 }
 
 const EditRecipe = () => {
+    const navigate = useNavigate();
+    const { id } = useParams<{ id: string }>();
+    const recipeId = id ? Number(id) : null;
 
     const tabs = [
         { id: Tab.UPLOAD, label: 'Upload Recipes', icon: ImageIcon },
@@ -41,6 +45,7 @@ const EditRecipe = () => {
         diets: '',
         sourceName: '',
         servings: 1,
+        preparationMinutes: 0,
         prepTime: 0,
         ingredients: [],
         steps: [],
@@ -62,25 +67,74 @@ const EditRecipe = () => {
         createRecipe, // This is the mutation trigger
         { isLoading: isUpdating }, // This is the destructured mutation result
     ] = useCreateRecipeMutation();
+    const [updateRecipe, { isLoading: isSavingUpdate }] = useUpdateRecipeMutation();
+    const { data: existingRecipe } = useGetRecipeQuery(recipeId!, { skip: !recipeId });
 
     const {
         reset,
+        clearErrors,
         control, 
         register,
         handleSubmit,
         watch,
-        formState: { isSubmitting, isDirty, errors } 
+        formState: { isSubmitting, isDirty, isSubmitted, errors } 
     } = methods;
 
-    const handleSubmitData = (data: RecipeDraft) => {
-        data['sourceName'] = 'image';
-        console.log(data);
-        createRecipe(data);
+    const handleSubmitData = async (data: RecipeDraft) => {
+        const payload: RecipeDraft = {
+            ...data,
+            sourceName: 'image',
+            images: currRecipe.images ?? data.images ?? []
+        };
+
+        const savedRecipeId = recipeId
+            ? await updateRecipe({ id: recipeId, recipe: payload }).unwrap()
+            : await createRecipe(payload).unwrap();
+        navigate(`/recipe-details/${savedRecipeId}`);
     };
 
     useEffect(() => {
-        setHasErrors(Object.keys(errors).length > 0);
-    }, [errors])
+        if (!existingRecipe) return;
+
+        const dishType = Array.isArray(existingRecipe.dishTypes)
+            ? existingRecipe.dishTypes[0] ?? ''
+            : existingRecipe.dishTypes ?? existingRecipe.dishType ?? '';
+        const cuisine = existingRecipe.cuisines ?? existingRecipe.cuisine ?? '';
+        const diets = Array.isArray(existingRecipe.diets) ? existingRecipe.diets[0] ?? '' : '';
+
+        const mappedRecipe: RecipeDraft = {
+            title: existingRecipe.title,
+            servings: existingRecipe.servings,
+            preparationMinutes: existingRecipe.preparationMinutes ?? 0,
+            types: dishType,
+            cuisines: cuisine,
+            diets,
+            sourceName: existingRecipe.sourceName ?? '',
+            ingredients: existingRecipe.extendedIngredients.map((ingredient) => ({
+                id: String(ingredient.id),
+                name: ingredient.name,
+                amount: String(ingredient.amount ?? ''),
+                unit: ingredient.unit ?? '',
+                image: ingredient.image
+            })),
+            steps: existingRecipe.instructions.flatMap((instruction) =>
+                instruction.steps.map((step, index) => ({
+                    id: `${step.stepNumber}-${index}`,
+                    stepNumber: step.stepNumber,
+                    description: step.description
+                }))
+            ),
+            images: existingRecipe.imageUrls ?? []
+        };
+
+        setCurrRecipe(mappedRecipe);
+        reset(mappedRecipe);
+        clearErrors();
+    }, [existingRecipe, reset, clearErrors]);
+
+    useEffect(() => {
+        setHasErrors(isSubmitted && Object.keys(errors).length > 0);
+    }, [errors, isSubmitted])
 
     const watchFile = watch("file", null);
     useEffect(() => {
@@ -100,7 +154,7 @@ const EditRecipe = () => {
 
     return (
         <>
-            <div className="container-fluid d-flex justify-content-center">
+            <div className="edit-recipe-container container-fluid d-flex justify-content-center">
                 <div className="card-glass d-flex flex-column w-100 newrecipe-container">
                     <FormProvider {...methods}>
                         <form id="createRecipe" onSubmit={handleSubmit(handleSubmitData)}>
@@ -165,7 +219,7 @@ const EditRecipe = () => {
                                             </button>
                                         ) : (
                                             <button type="submit" className="btn btn-sunny px-5 py-2 rounded-3 fw-bold shadow">
-                                                Publish Recipe
+                                                {recipeId ? 'Save Changes' : 'Publish Recipe'}
                                             </button>
                                         )}
                                     </footer>

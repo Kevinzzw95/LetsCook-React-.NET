@@ -1,41 +1,21 @@
 import Filter from '../../components/Filter';
 import RecipeCard from '../../components/RecipeCard';
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import './recipe-list.scss'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faFilter } from '@fortawesome/free-solid-svg-icons';
-import { useLocation } from 'react-router-dom';
-import { SearchItem } from '../../types/searchItem';
-import axios from 'axios';
-import { recipeCommon, recipeSearchRes } from '../../types/recipe';
-import url from '../../config/url';
-import agent from '../../redux/api/agent';
+import { useGetRecipesQuery } from '../../redux/recipe/recipeApiSlice';
 
 const RecipeList = () => {
 
-    const location = useLocation();
     const [isOpenMobileFilter, setIsOpenMobileFilter] = useState<boolean>(false); 
-    const [recipeList, setRecipeList] = useState<recipeCommon[]>([]);
-
-    /* useEffect(() => {
-        axios.get<recipeSearchRes>(url.search_url + location.search.split('?')[1])
-            .then(
-                res => {
-                    setRecipeList(res.data.results)
-                },
-                err => console.log(err)
-            )
-    }, [location]); */
-
-    useEffect(() => {
-        agent.Recipe.list()
-            .then(
-                recipes => {
-                    setRecipeList(recipes)
-                },
-                err => console.log(err)
-            )
-    }, []);
+    const { data: recipes = [] } = useGetRecipesQuery();
+    const recipeList = recipes.map((recipe: any) => ({
+        ...recipe,
+        images: recipe.imageUrls ?? recipe.images ?? [],
+        cuisines: recipe.cuisine ?? recipe.cuisines ?? '',
+        dishTypes: recipe.dishType ?? recipe.dishTypes ?? ''
+    }));
 
     const openFilter = () => {
         setIsOpenMobileFilter(val => !val);

@@ -49,6 +49,7 @@ const baseQueryWithReauth: BaseQueryFn = async (args, api, extraOptions) => {
 export const apiSlice = createApi({
     reducerPath: 'baseApi',
     baseQuery: baseQueryWithReauth,
+    tagTypes: ['MealPlan'],
     endpoints: builder => ({})
 })
 

@@ -16,9 +16,16 @@ namespace API.Data
         public DbSet<Ingredient> Ingredients { get; set; }
         public DbSet<ShoppingList> ShoppingLists { get; set; }
         public DbSet<ShoppingItem> ShoppingItems { get; set; }
+        public DbSet<MealPlanEntry> MealPlanEntries { get; set; }
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
+
+            builder.Entity<MealPlanEntry>()
+                .HasOne(entry => entry.Recipe)
+                .WithMany()
+                .HasForeignKey(entry => entry.RecipeId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<IdentityRole>()
                 .HasData(

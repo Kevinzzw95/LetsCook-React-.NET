@@ -7,16 +7,22 @@ body {
 	justify-content: center;
 	
 	#root {
-		max-width: 1200px;
-		width: 85%;
+		width: 100%;
 		display: flex;
 		flex-direction: column;
 		justify-content: space-between;
 		align-items: center;
+		@media (min-width: 1080px) {
+			width: 90%;
+		}
 
 		.container-fluid {
 			padding: 10px;
 		}
+	}
+
+	@media (max-width: 767px) {
+		padding-bottom: calc(96px + env(safe-area-inset-bottom));
 	}
 }
 

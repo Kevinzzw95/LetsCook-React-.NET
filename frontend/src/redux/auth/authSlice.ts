@@ -1,10 +1,10 @@
 import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 import { RootState } from "../store/store";
 
-interface authSliceState {
+export interface authSliceState {
     user: string | null;
     token: string | null;
-    refreshToken: string|null;
+    refreshToken: string | null;
 }
 
 const initialState: authSliceState = { user: null, token: null, refreshToken: null };
@@ -17,9 +17,13 @@ const authSlice = createSlice({
             const{ user, token, refreshToken } = action.payload;
             state.user = user;
             state.token = token;
-            state.refreshToken = refreshToken;
+            state.refreshToken = refreshToken ?? state.refreshToken;
 
-            localStorage.setItem('user', JSON.stringify(action.payload));
+            localStorage.setItem('user', JSON.stringify({
+                user: state.user,
+                token: state.token,
+                refreshToken: state.refreshToken
+            }));
         },
         logOut: (state) => {
             state.user = null; 
