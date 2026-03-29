@@ -23,6 +23,26 @@ interface Props {
     cancelEdit: () => void;
 }
 
+const EMPTY_RECIPE: RecipeDraft = {
+    title: '',
+    type: '',
+    cuisine: '',
+    diet: '',
+    sourceName: '',
+    servings: 1,
+    preparationMinutes: 0,
+    prepTime: 0,
+    ingredients: [],
+    steps: [],
+    images: [],
+};
+
+const normalizeSteps = (steps: RecipeDraft['steps']): RecipeDraft['steps'] =>
+    steps.map((step, index) => ({
+        ...step,
+        stepNumber: index + 1
+    }));
+
 const EditRecipe = () => {
     const navigate = useNavigate();
     const { id } = useParams<{ id: string }>();
@@ -36,21 +56,9 @@ const EditRecipe = () => {
         { id: Tab.IMAGES, label: 'Images', icon: ImageIcon }
     ];
     
-    const [ currTab, setCurrTab ] = useState<Tab>(Tab.OVERVIEW);
+    const [ currTab, setCurrTab ] = useState<Tab>(recipeId ? Tab.OVERVIEW : Tab.UPLOAD);
     const [ hasErrors, setHasErrors ] = useState<boolean>(false);
-    const [ currRecipe, setCurrRecipe  ] = useState<RecipeDraft>({
-        title: '',
-        types: '',
-        cuisines: '',
-        diets: '',
-        sourceName: '',
-        servings: 1,
-        preparationMinutes: 0,
-        prepTime: 0,
-        ingredients: [],
-        steps: [],
-        images: [],
-    });
+    const [ currRecipe, setCurrRecipe  ] = useState<RecipeDraft>(EMPTY_RECIPE);
     const [ isModalOpen, setIsModalOpen ] = useState<boolean>(false);
     const methods = useForm<RecipeDraft>({
         resolver: yupResolver<RecipeDraft>(validationSchema),
@@ -84,6 +92,7 @@ const EditRecipe = () => {
         const payload: RecipeDraft = {
             ...data,
             sourceName: 'image',
+            steps: normalizeSteps(data.steps),
             images: currRecipe.images ?? data.images ?? []
         };
 
@@ -94,21 +103,25 @@ const EditRecipe = () => {
     };
 
     useEffect(() => {
-        if (!existingRecipe) return;
+        if (!recipeId) {
+            setCurrRecipe(EMPTY_RECIPE);
+            setCurrTab(Tab.UPLOAD);
+            setHasErrors(false);
+            setIsModalOpen(false);
+            reset(EMPTY_RECIPE);
+            clearErrors();
+            return;
+        }
 
-        const dishType = Array.isArray(existingRecipe.dishTypes)
-            ? existingRecipe.dishTypes[0] ?? ''
-            : existingRecipe.dishTypes ?? existingRecipe.dishType ?? '';
-        const cuisine = existingRecipe.cuisines ?? existingRecipe.cuisine ?? '';
-        const diets = Array.isArray(existingRecipe.diets) ? existingRecipe.diets[0] ?? '' : '';
+        if (!existingRecipe) return;
 
         const mappedRecipe: RecipeDraft = {
             title: existingRecipe.title,
             servings: existingRecipe.servings,
             preparationMinutes: existingRecipe.preparationMinutes ?? 0,
-            types: dishType,
-            cuisines: cuisine,
-            diets,
+            type: existingRecipe.type ?? '',
+            cuisine: existingRecipe.cuisine ?? '',
+            diet: existingRecipe.diet ?? '',
             sourceName: existingRecipe.sourceName ?? '',
             ingredients: existingRecipe.extendedIngredients.map((ingredient) => ({
                 id: String(ingredient.id),
@@ -117,20 +130,20 @@ const EditRecipe = () => {
                 unit: ingredient.unit ?? '',
                 image: ingredient.image
             })),
-            steps: existingRecipe.instructions.flatMap((instruction) =>
+            steps: normalizeSteps(existingRecipe.instructions.flatMap((instruction) =>
                 instruction.steps.map((step, index) => ({
                     id: `${step.stepNumber}-${index}`,
                     stepNumber: step.stepNumber,
                     description: step.description
                 }))
-            ),
+            )),
             images: existingRecipe.imageUrls ?? []
         };
 
         setCurrRecipe(mappedRecipe);
         reset(mappedRecipe);
         clearErrors();
-    }, [existingRecipe, reset, clearErrors]);
+    }, [recipeId, existingRecipe, reset, clearErrors]);
 
     useEffect(() => {
         setHasErrors(isSubmitted && Object.keys(errors).length > 0);
@@ -186,9 +199,15 @@ const EditRecipe = () => {
                             }
                             <div className='d-flex flex-column flex-grow-1 position-relative'>
                                 <main className="flex-grow-1 p-4 p-md-5 overflow-auto">
-                                    <div className={`${currTab === Tab.UPLOAD ? 'col-12 align-self-center text-center py-5 bg-orange-light border-orange-dashed rounded-3' : 'd-none'}`}>
-                                        <UploadByUrlEditor currRecipe={currRecipe} updateData={updateData} isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
-                                        <ScanRecipeEditor currRecipe={currRecipe} updateData={updateData} isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
+                                    <div className={`${currTab === Tab.UPLOAD ? 'upload-stage' : 'd-none'}`}>
+                                        <div className="">
+                                            <div className="upload-stage__secondary">
+                                                <UploadByUrlEditor />
+                                            </div>
+                                            <div className="upload-stage__primary pt-5">
+                                                <ScanRecipeEditor currRecipe={currRecipe} updateData={updateData} isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
+                                            </div>
+                                        </div>
                                     </div>
                                     <div className={`${currTab === Tab.OVERVIEW ? '' : 'd-none'}`}>
                                         <OverviewEditor currRecipe={currRecipe} updateData={updateData} />

@@ -228,7 +228,7 @@ const MealPlans = () => {
                                                 {mealTypes.reduce((count, mealType) => count + (entriesBySlot.get(`${dateKey}-${mealType}`)?.length ?? 0), 0)}
                                             </span>
                                         </div>
-                                        <div className="calendar-slot-list">
+                                        {/* <div className="calendar-slot-list">
                                             {mealTypes.map(mealType => {
                                                 const slotEntries = entriesBySlot.get(`${dateKey}-${mealType}`) ?? [];
                                                 return (
@@ -238,7 +238,7 @@ const MealPlans = () => {
                                                     </div>
                                                 );
                                             })}
-                                        </div>
+                                        </div> */}
                                     </button>
                                 );
                             })}

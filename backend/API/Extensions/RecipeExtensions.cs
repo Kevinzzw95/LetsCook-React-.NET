@@ -9,6 +9,21 @@ namespace API.Extensions
 {
     public static class RecipeExtensions
     {
+        public static List<ExtendedIngredientDto> MapRecipeIngredientsToDto(this Recipe recipe) =>
+            recipe.RecipeIngredients
+                .OrderBy(recipeIngredient => recipeIngredient.SortOrder)
+                .Select(recipeIngredient => new ExtendedIngredientDto
+                {
+                    Id = recipeIngredient.IngredientId,
+                    Consistency = recipeIngredient.Consistency,
+                    Original = recipeIngredient.Original,
+                    Amount = recipeIngredient.Amount,
+                    Unit = recipeIngredient.Unit,
+                    Name = recipeIngredient.DisplayName,
+                    Image = recipeIngredient.DisplayImage
+                })
+                .ToList();
+
         public static RecipeDto MapRecipeToDto(this Recipe recipe)
         {
 
@@ -26,9 +41,14 @@ namespace API.Extensions
                 Diets = recipe.Diets,
                 DishType = recipe.DishType,
                 Summary = recipe.Summary,
+                Calories = recipe.Calories,
+                Protein = recipe.Protein,
+                Carbohydrate = recipe.Carbohydrate,
+                Fat = recipe.Fat,
                 CreatedAt = recipe.CreatedAt,
                 UpdatedAt = recipe.UpdatedAt,
                 UserId = recipe.UserId,
+                ExtendedIngredients = recipe.MapRecipeIngredientsToDto(),
                 Instructions = recipe.Instructions.Select(instruction => 
                     new InstructionDto {
                         Name = instruction.Name,

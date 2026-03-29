@@ -1,9 +1,15 @@
 .qty-input {
-    width: 100px;
+    width: 50px;
     position: relative;
 }
+.unit-selector {
+    width: 60px;
+    .form-select {
+        background-position: right 0.1rem center;
+    }
+}
 .store-input {
-    width: 150px;
+    width: 100px;
     position: relative;
     font-size: 14px;
 }

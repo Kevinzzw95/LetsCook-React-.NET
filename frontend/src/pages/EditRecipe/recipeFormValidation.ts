@@ -4,9 +4,9 @@ import { RecipeDraft } from "../../types/recipe";
 export const validationSchema: ObjectSchema<RecipeDraft> = object({
 	title: string().required("Please provide a recipe title"), 
 	servings: number().required(),
-	types: string().optional(),
-	cuisines: string().optional(),
-	diets: string().optional(),
+	type: string().optional(),
+	cuisine: string().optional(),
+	diet: string().optional(),
 	preparationMinutes: number().min(0).optional(),
 	steps: array().of(
 		object({

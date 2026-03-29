@@ -56,3 +56,34 @@
         }
     }
 }
+
+.upload-stage {
+    width: 100%;
+}
+
+.upload-stage__layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1.5fr) minmax(320px, 0.8fr);
+    gap: 1.5rem;
+    align-items: start;
+}
+
+.upload-stage__primary,
+.upload-stage__secondary {
+    min-width: 0;
+}
+
+.upload-stage__secondary {
+    position: sticky;
+    top: 1rem;
+}
+
+@media (max-width: 1199px) {
+    .upload-stage__layout {
+        grid-template-columns: 1fr;
+    }
+
+    .upload-stage__secondary {
+        position: static;
+    }
+}

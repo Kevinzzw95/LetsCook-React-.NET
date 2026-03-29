@@ -48,6 +48,12 @@ builder.Services.AddDbContext<RecipeContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
 );
 builder.Services.AddScoped<ImageService>();
+builder.Services.AddHttpClient<NutritionCalculationService>(client =>
+{
+    client.BaseAddress = new Uri(
+        builder.Configuration["Usda:BaseUrl"] ?? "https://api.nal.usda.gov/fdc/v1/"
+    );
+});
 builder.Services.AddIdentityCore<User>(opt =>
 {
     opt.User.RequireUniqueEmail = true;

@@ -69,10 +69,40 @@
                     justify-content: center;
                     text-align: center;
                     cursor: pointer;
+                    gap: 0.25rem;
 
                     &.active {
                         border: solid;
                     }
+
+                    &.disabled {
+                        opacity: 0.45;
+                        cursor: not-allowed;
+                        filter: grayscale(1);
+                        background: #f3f4f6;
+                        border: 1px dashed #d1d5db;
+                    }
+                    .filter-text {
+                        font-size: 8px;
+                        font-weight: 900;
+                        height: 20px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                    }
+                }
+
+                .refinement-count {
+                    display: inline-flex;
+                    align-items: center;
+                    justify-content: center;
+                    min-width: 22px;
+                    height: 22px;
+                    border-radius: 999px;
+                    background: rgba(0, 0, 0, 0.08);
+                    font-size: 11px;
+                    line-height: 1;
+                    padding: 0 6px;
                 }
             }
         }

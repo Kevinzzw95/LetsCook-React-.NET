@@ -1,7 +1,4 @@
-import { useEffect, useRef, useState } from "react";
 import './steps-editor.scss'
-import { faPen, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Control, useFieldArray, useFormContext, UseFormRegister } from "react-hook-form";
 import { ErrorMessage } from "@hookform/error-message";
 import { RecipeDraft } from "../../../types/recipe";
@@ -27,22 +24,27 @@ const StepsEditor = ({currRecipe, updateData, control, register}: Props) => {
         control,
         name: "steps"
     });
-    const [ currStep, setCurrStep ] = useState<number>(currRecipe && currRecipe.steps.length || 1);
+
+    const normalizeSteps = (steps: RecipeDraft["steps"]) =>
+        steps.map((step, index) => ({
+            ...step,
+            stepNumber: index + 1
+        }));
 
     const handleAddStep = () => {
-        setCurrStep(currStep + 1);
         const newStep: Step = {
             id: uuidv4(),
             description: '',
-            stepNumber: currStep
+            stepNumber: currRecipe.steps.length + 1
         };
         appendStep(newStep);
-        updateData({ steps: [...currRecipe.steps, newStep] });
+        updateData({ steps: normalizeSteps([...currRecipe.steps, newStep]) });
     };
     const handleRemoveStep = (index: number, id: string) => { 
-        setCurrStep(currStep - 1);
         removeStep(index);
-        updateData({ steps: currRecipe.steps.filter((s) => s.id !== id) });
+        updateData({
+            steps: normalizeSteps(currRecipe.steps.filter((s) => s.id !== id))
+        });
     }
     
     const updateStep = (id: string, value: string) => {
@@ -78,7 +80,7 @@ const StepsEditor = ({currRecipe, updateData, control, register}: Props) => {
                 {stepFields.map((step, index) => (
                     <div key={step.id} className="d-flex gap-3">
                         <input {...register(`steps.${index}.id`)} hidden value={step.id} />
-                        <input {...register(`steps.${index}.stepNumber`)} hidden value={step.stepNumber} />
+                        <input {...register(`steps.${index}.stepNumber`)} hidden value={index + 1} />
                         <div 
                             className="d-flex align-items-center justify-content-center text-white fw-bold rounded-circle flex-shrink-0 mt-1 shadow-sm"
                             style={{ width: '32px', height: '32px', background: 'linear-gradient(to bottom right, #fdba74, #f97316)' }}

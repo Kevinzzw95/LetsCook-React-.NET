@@ -1,14 +1,15 @@
-import { Clock, Flame, Star, Users } from 'lucide-react';
+import { Clock, Trash2, Users } from 'lucide-react';
 import { recipeCommon } from '../../types/recipe';
-import { SearchItem } from '../../types/searchItem';
 import './recipe-card.scss';
 import { Link } from "react-router-dom";
 
 type Props = {
     recipe: Partial<recipeCommon>;
+    onDelete?: (recipe: Partial<recipeCommon>) => void;
+    isDeleting?: boolean;
 }
 
-const RecipeCard = ({ recipe } : Props) => {
+const RecipeCard = ({ recipe, onDelete, isDeleting = false } : Props) => {
     
     return (
         <div key={recipe.id} className="col-md-6 col-xl-4 animate-fade-in">
@@ -24,12 +25,25 @@ const RecipeCard = ({ recipe } : Props) => {
                 </button> */}
                 <div className="position-absolute bottom-0 start-0 m-3">
                     <span className="badge bg-white text-dark shadow-sm px-2 py-1 rounded-pill fw-bold" style={{ fontSize: '0.75rem' }}>
-                        {recipe.cuisines}
+                        {recipe.cuisine}
                     </span>
                 </div>
                 </div>
                 
                 <div className="card-body p-4 d-flex flex-column">
+                    {onDelete && (
+                        <div className="d-flex justify-content-end mb-3">
+                            <button
+                                type="button"
+                                className="recipe-card-delete btn btn-light border-0 rounded-pill d-inline-flex align-items-center gap-2"
+                                onClick={() => onDelete(recipe)}
+                                disabled={isDeleting}
+                            >
+                                <Trash2 size={14} />
+                                {isDeleting ? 'Deleting...' : 'Delete'}
+                            </button>
+                        </div>
+                    )}
                 {/* <div className="d-flex justify-content-between align-items-start mb-2">
                     <h3 className="h5 fw-bold text-dark mb-0 line-clamp-2">{recipe.title}</h3>
                     <div className="d-flex align-items-center gap-1 text-warning small fw-bold">
@@ -54,13 +68,13 @@ const RecipeCard = ({ recipe } : Props) => {
                     </div>
 
                     <div className="d-flex gap-1 flex-wrap mb-3">
-                        {recipe.diets?.map(d => d !== 'None' && (
-                            <span key={d} className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 fw-normal">
-                                {d}
+                        {recipe.diet && recipe.diet !== 'None' && (
+                            <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 fw-normal">
+                                {recipe.diet}
                             </span>
-                        ))}
+                        )}
                         <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2 fw-normal">
-                            {recipe.dishTypes}
+                            {recipe.type}
                         </span>
                     </div>
 

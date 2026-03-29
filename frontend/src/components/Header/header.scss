@@ -313,7 +313,7 @@
         border-radius: 1.5rem 1.5rem 0.9rem 0.9rem;
         padding: 0.75rem 0.5rem calc(0.75rem + env(safe-area-inset-bottom));
         display: grid !important;
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-columns: repeat(6, minmax(0, 1fr));
         gap: 0.25rem;
         align-items: stretch !important;
       }
@@ -331,7 +331,6 @@
       .btn-link,
       .btn-newrecipe,
       .icon-circle {
-        min-height: 58px;
         border-radius: 1rem !important;
         display: flex !important;
         flex-direction: column;
@@ -345,7 +344,6 @@
 
       .btn-link span,
       .btn-newrecipe .add-recipe-label {
-        display: block !important;
         font-size: 0.68rem;
         line-height: 1.1;
         text-align: center;
@@ -416,8 +414,8 @@
 		content: none;
 	}
     @media (max-width: 768px) {
-      width: 30px;
-      height: 30px;
+      width: 100%;
+      height: 100%;
     }
     .btn-newrecipe {
       color: var(--contrast-color);

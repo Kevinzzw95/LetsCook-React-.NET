@@ -1,16 +1,81 @@
 import { FieldValues } from "react-hook-form";
-import { recipeCommon, RecipeDraft } from "../../types/recipe"
+import { recipeCommon } from "../../types/recipe"
 import { apiSlice } from "../api/apiSlice"
 import { ShoppingItem, ShoppingList, updateShoppingItemPayload } from "../../types/ingredient";
 import { AddMealPlanDaysToShoppingListPayload, AddMealPlanDaysToShoppingListResult, MealPlanEntry, MealPlanRecipeOption, MealPlanUpsertPayload } from "../../types/mealPlan";
+import { RecipeFacetResponse, RecipeSearchParams, RecipeSearchResponse } from "../../types/recipeSearch";
+
+type RecipeApiResponse = Partial<recipeCommon> & {
+    cuisines?: string | string[];
+    diet?: string;
+    diets?: string | string[];
+    type?: string;
+    dishType?: string | string[];
+    dishTypes?: string | string[];
+    imageUrls?: string[];
+};
+
+type RecipeSearchApiResponse = Omit<RecipeSearchResponse, 'items'> & {
+    items?: RecipeApiResponse[];
+};
+
+const mapRecipeResponse = (recipe: RecipeApiResponse): recipeCommon => ({
+    ...recipe,
+    cuisine: recipe.cuisine ?? recipe.cuisines ?? '',
+    diet: Array.isArray(recipe.diets) ? recipe.diets[0] ?? '' : recipe.diet ?? '',
+    type: recipe.type ?? recipe.dishType ?? (Array.isArray(recipe.dishTypes) ? recipe.dishTypes[0] : recipe.dishTypes) ?? '',
+    imageUrls: recipe.imageUrls ?? []
+});
 
 export const recipeApiSlice = apiSlice.injectEndpoints({
     endpoints: builder => ({
         getRecipes: builder.query<MealPlanRecipeOption[], void>({
-            query: () => ({ url: 'recipe' })
+            query: () => ({ url: 'recipe' }),
+            providesTags: ['RecipeList']
+        }),
+        searchRecipes: builder.query<RecipeSearchResponse, RecipeSearchParams>({
+            query: ({ pageNumber = 1, pageSize = 12, query, type, cuisine, diet }) => {
+                const params = new URLSearchParams({
+                    pageNumber: pageNumber.toString(),
+                    pageSize: pageSize.toString()
+                });
+
+                if (query) params.set('query', query);
+                if (type) params.set('type', type);
+                if (cuisine) params.set('cuisine', cuisine);
+                if (diet) params.set('diet', diet);
+
+                return { url: `recipe/search?${params.toString()}` };
+            },
+            transformResponse: (response: RecipeSearchApiResponse): RecipeSearchResponse => ({
+                ...response,
+                items: (response.items ?? []).map(mapRecipeResponse)
+            }),
+            providesTags: (result) =>
+                result
+                    ? [
+                        ...result.items.map((recipe) => ({ type: 'Recipe' as const, id: recipe.id })),
+                        'RecipeList'
+                    ]
+                    : ['RecipeList']
+        }),
+        getRecipeFacets: builder.query<RecipeFacetResponse, Omit<RecipeSearchParams, 'pageNumber' | 'pageSize'>>({
+            query: ({ query, type, cuisine, diet }) => {
+                const params = new URLSearchParams();
+                if (query) params.set('query', query);
+                if (type) params.set('type', type);
+                if (cuisine) params.set('cuisine', cuisine);
+                if (diet) params.set('diet', diet);
+
+                const suffix = params.toString();
+                return { url: `recipe/facets${suffix ? `?${suffix}` : ''}` };
+            },
+            providesTags: ['RecipeFacets']
         }),
         getRecipe: builder.query<recipeCommon, number>({
             query: (id) => ({ url: `recipe/${id}` }),
+            transformResponse: mapRecipeResponse,
+            providesTags: (_result, _error, id) => [{ type: 'Recipe', id }]
         }),
         createRecipe: builder.mutation<number, FieldValues>({
             query: recipe => ({
@@ -18,6 +83,7 @@ export const recipeApiSlice = apiSlice.injectEndpoints({
 				method: 'POST',
 				body: createFormData(recipe),
             }),
+            invalidatesTags: ['RecipeList', 'RecipeFacets']
         }),
         updateRecipe: builder.mutation<number, { id: number; recipe: FieldValues }>({
             query: ({ id, recipe }) => ({
@@ -25,6 +91,22 @@ export const recipeApiSlice = apiSlice.injectEndpoints({
                 method: 'PUT',
                 body: createFormData(recipe),
             }),
+            invalidatesTags: (_result, _error, { id }) => [
+                { type: 'Recipe', id },
+                'RecipeList',
+                'RecipeFacets'
+            ]
+        }),
+        deleteRecipe: builder.mutation<void, number>({
+            query: (id) => ({
+                url: `recipe/${id}`,
+                method: 'DELETE'
+            }),
+            invalidatesTags: (_result, _error, id) => [
+                { type: 'Recipe', id },
+                'RecipeList',
+                'RecipeFacets'
+            ]
         }),
         addItemsToShoppingList: builder.mutation<ShoppingItem, FieldValues>({
             query: shoppingList => ({
@@ -97,6 +179,14 @@ function createFormData(item: FieldValues) {
             });
         } else if(key === 'ingredients' || key === 'steps') {
 			formData.append(key, JSON.stringify(item[key]));
+		} else if (key === 'type') {
+            formData.append('dishType', item[key] ?? '');
+        } else if (key === 'cuisine') {
+            formData.append('cuisine', item[key] ?? '');
+        } else if (key === 'diet') {
+            if (item[key]) {
+                formData.append('diets', item[key]);
+            }
 		} else {
             formData.append(key, item[key]);
         }
@@ -106,9 +196,12 @@ function createFormData(item: FieldValues) {
 
 export const {
     useGetRecipesQuery,
+    useSearchRecipesQuery,
+    useGetRecipeFacetsQuery,
     useGetRecipeQuery,
     useCreateRecipeMutation,
     useUpdateRecipeMutation,
+    useDeleteRecipeMutation,
     useAddItemsToShoppingListMutation,
     useGetShoppingListQuery,
     useUpdateShoppingItemMutation,

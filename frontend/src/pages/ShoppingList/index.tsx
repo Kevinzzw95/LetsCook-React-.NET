@@ -126,7 +126,7 @@ const ShoppingList = () => {
                     {/* List Area */}
                     {
                         filteredItems && 
-                        <div className="d-flex flex-column gap-3">
+                        <div className="d-flex flex-column flex-md-row gap-3">
                             {filteredItems.length === 0 ? (
                                 <div className="text-center py-5 opacity-50">
                                     <ShoppingCart size={48} className="text-secondary mb-3" />
@@ -134,7 +134,7 @@ const ShoppingList = () => {
                                 </div>
                             ) : (
                                 filteredItems.map(item => (
-                                    <div key={item.itemId} className="card-glass py-2 px-3 d-flex flex-column flex-md-row gap-3 align-items-md-center animate-fade-in">
+                                    <div key={item.itemId} className="col-md-6 card-glass py-2 px-3 d-flex flex-column flex-md-row gap-3 align-items-md-center animate-fade-in">
                                         <ShoppingListCard item={item} updateItem={updateItem} deleteItem={deleteItem}/>
                                     </div>
                                 ))

@@ -55,7 +55,7 @@ const ShoppingListCard = ({item, updateItem, deleteItem}: Props) => {
                 >
                     {item.isBought ? <Check size={16} /> : <Circle size={16} className="text-transparent" />}
                 </button>
-                <img src="../img/Tomato.jpg" className="shopping-list-image object-fit-cover border rounded" alt="" />
+                {/* <img src="../img/Tomato.jpg" className="shopping-list-image object-fit-cover border rounded" alt="" /> */}
                 <div>
                     <p className={`m-0 fw-bold text-dark fs-5 ${item.isBought ? 'text-decoration-line-through text-muted' : ''}`}>
                         {item.name}
@@ -76,14 +76,12 @@ const ShoppingListCard = ({item, updateItem, deleteItem}: Props) => {
                                 onChange={(e) =>setQuantity(e.target.value)}
                                 placeholder="Qty"
                             />
-                            <span className="input-group-text bg-white text-muted px-2"><small>qty</small></span>
                         </div>
 
-                        <div className="input-group input-group-sm qty-input">
+                        <div className="input-group input-group-sm unit-selector">
                             <select
                                 onChange={(e) => setUnit(e.target.value)}
-                                className="form-select"
-                                style={{ width: '110px' }}
+                                className="form-select px-1"
                                 value={unit}
                             >
                             <option value="">Unit</option>

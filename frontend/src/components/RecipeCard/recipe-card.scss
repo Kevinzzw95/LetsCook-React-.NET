@@ -5,3 +5,14 @@
         aspect-ratio: 1.2 / 1;
     }
 }
+
+.recipe-card-delete {
+    color: #b42318;
+    background: rgba(255, 241, 240, 0.95);
+    transition: background-color 160ms ease, color 160ms ease;
+
+    &:hover:not(:disabled) {
+        color: #912018;
+        background: rgba(254, 228, 226, 1);
+    }
+}

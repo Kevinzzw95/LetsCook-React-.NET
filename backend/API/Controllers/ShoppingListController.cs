@@ -102,6 +102,7 @@ namespace API.Controllers
             var mealPlanEntries = await _context.MealPlanEntries
                 .AsNoTracking()
                 .Include(entry => entry.Recipe)
+                .ThenInclude(recipe => recipe.RecipeIngredients)
                 .Where(entry => entry.UserId == userId && selectedDates.Contains(entry.PlannedDate))
                 .ToListAsync();
 
@@ -138,7 +139,9 @@ namespace API.Controllers
             var shoppingList = await RetrieveShoppingList(await GetUserIdAsync());
             if (shoppingList == null) shoppingList = await CreateShoppingList();
 
-            var recipe = await _context.Recipes.FindAsync(recipeId);
+            var recipe = await _context.Recipes
+                .Include(currentRecipe => currentRecipe.RecipeIngredients)
+                .FirstOrDefaultAsync(currentRecipe => currentRecipe.Id == recipeId);
             if (recipe == null)
             {
                 return NotFound();
@@ -209,8 +212,8 @@ namespace API.Controllers
         private async Task<int> AddRecipeIngredientsToShoppingList(ShoppingList shoppingList, List<Recipe> recipes)
         {
             var ingredientIds = recipes
-                .SelectMany(recipe => recipe.ExtendedIngredientsList)
-                .Select(ingredient => ingredient.Id)
+                .SelectMany(recipe => recipe.RecipeIngredients)
+                .Select(recipeIngredient => recipeIngredient.IngredientId)
                 .Distinct()
                 .ToList();
 
@@ -227,9 +230,9 @@ namespace API.Controllers
 
             foreach (var recipe in recipes)
             {
-                foreach (var recipeIngredient in recipe.ExtendedIngredientsList)
+                foreach (var recipeIngredient in recipe.RecipeIngredients.OrderBy(recipeIngredient => recipeIngredient.SortOrder))
                 {
-                    if (!ingredients.TryGetValue(recipeIngredient.Id, out var ingredient))
+                    if (!ingredients.TryGetValue(recipeIngredient.IngredientId, out var ingredient))
                     {
                         continue;
                     }

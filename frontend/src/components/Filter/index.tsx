@@ -3,20 +3,33 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faXmark, faLeaf } from '@fortawesome/free-solid-svg-icons';
 import { useSearchParams } from 'react-router-dom';
 import { REFINEMENTS } from '../../constants';
+import { RefinementCounts } from '../../types/refinements';
 
 type Props = {
     isOpenMobileFilter: boolean;
     openFilter: () => void;
+    resultCount: number;
+    counts: RefinementCounts;
 };
 
 
-const Filter = ({ isOpenMobileFilter, openFilter }: Props) => {
+const Filter = ({ isOpenMobileFilter, openFilter, resultCount, counts }: Props) => {
 
     const [ searchParams, setSearchParams ] = useSearchParams();
 
     const clickFilterHandler = (filterName: string, filterValue: string) => {
-        searchParams.set(filterName, filterValue);
-        setSearchParams(searchParams);
+        const valueCount = counts[filterName]?.[filterValue] ?? 0;
+        if (valueCount === 0) return;
+
+        const nextParams = new URLSearchParams(searchParams);
+        if (nextParams.get(filterName)?.toUpperCase() === filterValue.toUpperCase()) {
+            nextParams.delete(filterName);
+            nextParams.delete('page');
+        } else {
+            nextParams.set(filterName, filterValue);
+            nextParams.set('page', '1');
+        }
+        setSearchParams(nextParams);
     };
 
     return (
@@ -26,7 +39,7 @@ const Filter = ({ isOpenMobileFilter, openFilter }: Props) => {
                     <div className="d-flex justify-content-between align-items-center">
                         <div>
                             <span className="search-result-count justi">
-                                142 Results
+                                {resultCount} Results
                             </span>
                         </div>
                         <button className="close" onClick={ openFilter }>
@@ -51,11 +64,16 @@ const Filter = ({ isOpenMobileFilter, openFilter }: Props) => {
                                                 REFINEMENTS[refinementName] && REFINEMENTS[refinementName].map((refinementValue, index) => 
                                                     <li key={index} className='type-list-item col px-1'>
                                                         <div className='card my-2'>
-                                                            <div className={`card-body flex-column ${ refinementValue.toUpperCase() === searchParams.get(refinementName)?.toUpperCase() ? 'active' : '' }`} onClick={() => clickFilterHandler(refinementName, refinementValue)}> 
-                                                                <FontAwesomeIcon icon={faLeaf} />
-                                                                <p className="w-100 mt-2 mb-0">
+                                                            <div
+                                                                className={`card-body flex-column ${ refinementValue.toUpperCase() === searchParams.get(refinementName)?.toUpperCase() ? 'active' : '' } ${(counts[refinementName]?.[refinementValue] ?? 0) === 0 ? 'disabled' : ''}`}
+                                                                onClick={() => clickFilterHandler(refinementName, refinementValue)}
+                                                            > 
+                                                                <p className="filter-text w-100 mt-2 mb-0">
                                                                     {refinementValue}
-                                                                </p>                                  
+                                                                </p>
+                                                                <span className="refinement-count">
+                                                                    {counts[refinementName]?.[refinementValue] ?? 0}
+                                                                </span>
                                                             </div>
                                                         </div>
                                                     </li>

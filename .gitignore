@@ -1,0 +1,9 @@
+# Agent-related docs and local assistant metadata
+.agents/
+AGENTS.md
+agents.md
+**/AGENTS.md
+**/agents.md
+.codex/
+.claude/
+.cursor/

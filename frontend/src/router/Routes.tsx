@@ -9,6 +9,7 @@ import App from "../App";
 import ShoppingList from "../pages/ShoppingList";
 import MealPlans from "../pages/MealPlans";
 import Profile from "../pages/Profile";
+import Chatbot from "../pages/Chatbot";
 
 export const router = createBrowserRouter([
    { 
@@ -23,6 +24,7 @@ export const router = createBrowserRouter([
                     { path: '/recipe-list/', element: <RecipeList />},
                     { path: '/shopping-list/', element: <ShoppingList />},
                     { path: '/meal-plans/', element: <MealPlans />},
+                    { path: '/chatbot/', element: <Chatbot />},
                     { path: '/profile/', element: <Profile />},
                     { path: '/recipe-details/:id', element: <RecipeDetails />},
                     { path: '/new-recipe/', element: <EditRecipe />}

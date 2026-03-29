@@ -2,6 +2,7 @@ from flask import Blueprint, jsonify, current_app, request
 from google import genai
 from pydantic import BaseModel
 from google.genai import types
+import base64
 import PIL.Image
 import requests
 from selenium import webdriver
@@ -13,20 +14,26 @@ from io import BytesIO
 from playwright.sync_api import sync_playwright
 import json
 import os
+from PIL import UnidentifiedImageError
 
 main = Blueprint('main', __name__)
 
 
 class Ingredient(BaseModel):
     name: str
-    original: str
+    unit: str
     amount: str
+
+
+class Step(BaseModel):
+    stepNumber: int
+    description: str
 
 
 class Recipe(BaseModel):
     title: str
     ingredients: list[Ingredient]
-    steps: list[str]
+    steps: list[Step]
     servings: int
 
 
@@ -45,7 +52,7 @@ def generateRecipeImages():
     for file in files:
         images.append(PIL.Image.open(file.stream))
     response = client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         contents=["Extract the steps of the recipe in JSON format", *images],
         config={
             'response_mime_type': 'application/json',
@@ -55,14 +62,36 @@ def generateRecipeImages():
     return response.text
 
 
+def parse_cookies(cookie_str):
+    cookies = []
+
+    for pair in cookie_str.split(';'):
+        pair = pair.strip()
+        if not pair:
+            continue
+
+        name, value = pair.split('=', 1)  # split only first '='
+
+        cookies.append({
+            "name": name,
+            "value": value,
+            "domain": ".xiaohongshu.com",
+            "path": "/"
+        })
+
+    return cookies
+
 @main.route('/generateRecipeUrl', methods=['POST'])
 def generateRecipeUrl():
     target_url = request.get_json().get('url')
+    xhs_cookies = current_app.config.get('XHS_COOKIES', 'No cookies found')
+
     if not target_url:
         return jsonify({'error': 'Missing URL parameter'}), 400
 
     match = re.search(r'https://\S+', target_url)
     if match:
+        target_url = match.group()
         response = requests.get(match.group())
     else:
         print("No URL found")
@@ -78,86 +107,7 @@ def generateRecipeUrl():
             browser = p.chromium.launch(headless=True)
             context = browser.new_context()
 
-            context.add_cookies([
-                {
-                    "name": "a1",
-                    "value": "1960ba1892bqvusbc3wtkwy22pc2ah47svvr82tkz30000372876",
-                    "domain": ".xiaohongshu.com",
-                    "path": "/",
-                },
-                {
-                    "name": "abRequestId",
-                    "value": "ec964229-62a6-5e01-8890-2c0f603e1643",
-                    "domain": ".xiaohongshu.com",
-                    "path": "/",
-                },
-                {
-                    "name": "acw_tc",
-                    "value": "0a0bb41a17547983492431910efb290c42ce0b0a18080aee0a860e300542ed",
-                    "domain": "edith.xiaohongshu.com",
-                    "path": "/",
-                },
-                {
-                    "name": "acw_tc",
-                    "value": "0a00d2d717547973772036854e2477a1ca2a56e2e968e519ea29a7465bd8dc",
-                    "domain": "www.xiaohongshu.com",
-                    "path": "/",
-                },
-                {
-                    "name": "gid",
-                    "value": "yjK8D0y0W4MKyjK8D0yYjhJ9JDAh7MDSqE9ThTuEvJJUSFq8J0x4WY888qWJYWK8JDjDYdYW",
-                    "domain": ".xiaohongshu.com",
-                    "path": "/",
-                },
-                {
-                    "name": "loadts",
-                    "value": "1754797378668",
-                    "domain": ".xiaohongshu.com",
-                    "path": "/",
-                },
-                {
-                    "name": "sec_poison_id",
-                    "value": "bd90f0e8-fcdc-41bc-a885-68ec5c269fee",
-                    "domain": ".xiaohongshu.com",
-                    "path": "/",
-                },
-                {
-                    "name": "unread",
-                    "value": "{%22ub%22:%2267ea17650000000009038819%22%2C%22ue%22:%2267ed8c8f000000000f039d98%22%2C%22uc%22:22}",
-                    "domain": ".xiaohongshu.com",
-                    "path": "/",
-                },
-                {
-                    "name": "web_session",
-                    "value": "040069b1075263566808ee10a43a4bae2bc9f0",
-                    "domain": ".xiaohongshu.com",
-                    "path": "/",
-                },
-                {
-                    "name": "webBuild",
-                    "value": "4.75.3",
-                    "domain": ".xiaohongshu.com",
-                    "path": "/",
-                },
-                {
-                    "name": "webId",
-                    "value": "878c249ff256e8466cf15035605675e7",
-                    "domain": ".xiaohongshu.com",
-                    "path": "/",
-                },
-                {
-                    "name": "websectiga",
-                    "value": "10f9a40ba454a07755a08f27ef8194c53637eba4551cf9751c009d9afb564467",
-                    "domain": ".xiaohongshu.com",
-                    "path": "/",
-                },
-                {
-                    "name": "xsecappid",
-                    "value": "xhs-pc-web",
-                    "domain": ".xiaohongshu.com",
-                    "path": "/",
-                }
-            ])
+            context.add_cookies(parse_cookies(xhs_cookies))
 
             page = context.new_page()
 
@@ -172,23 +122,64 @@ def generateRecipeUrl():
             data = handle_rednote(page)
             browser.close()
 
-        images = [download_image(url) for url in data['image_urls']]
-        query = [
-            "Extract the steps of the recipe from this text: ",
-            data['text'],
-            "Then extract the steps from pictures:",
-            *images,
-            "Now combine the steps extracted from text and these images, "
-            "summarize steps and ingredients with quantity(if provided)."
+        downloaded_images = [item for url in data['image_urls'] if (item := download_image(url))]
+        images = [item['image'] for item in downloaded_images]
+        query = ["Extract the steps of the recipe from this text: ", data['text']]
+        if images:
+            query.extend([
+                "Then extract the steps from pictures:",
+                *images,
+                "Now combine the steps extracted from text and these images, "
+                "summarize steps and ingredients with quantity(if provided)."
+            ])
+        else:
+            query.append(
+                "No valid recipe images could be downloaded, so rely on the text only and summarize steps and ingredients with quantity if provided."
+            )
+        generate_recipe_response = generateRecipeHelper(query)
+        recipe_payload = json.loads(generate_recipe_response)
+        recipe_payload['images'] = [
+            {
+                'url': item['url'],
+                'contentType': item['content_type'],
+                'base64': item['base64'],
+            }
+            for item in downloaded_images
         ]
-        return generateRecipeHelper(query)
+        return jsonify(recipe_payload)
+
+
+def extract_image_urls(soup):
+
+    seen = set()
+    results = []
+
+    for slide in soup.select("div.swiper-slide"):
+        classes = slide.get("class", [])
+
+        # skip duplicate slides
+        if "swiper-slide-duplicate" in classes:
+            continue
+
+        img = slide.find("img")
+        if not img:
+            continue
+
+        src = img.get("src")
+        if not src or src in seen:
+            continue
+
+        seen.add(src)
+        results.append(src)
+
+    return results
 
 
 def generateRecipeHelper(query):
     key = current_app.config.get('API_KEY_GEMINI', 'No key found')
     client = genai.Client(api_key=key)
     response = client.models.generate_content(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         contents=query,
         config={
             'response_mime_type': 'application/json',
@@ -199,18 +190,52 @@ def generateRecipeHelper(query):
 
 
 def handle_rednote(page):
-
     soup = BeautifulSoup(page.content(), 'html.parser')
     span_texts = [span.get_text(strip=True)
-         for parent in soup.find_all("span", class_="note-text")
-         for span in parent.find_all("span")]
-    image_urls = [img['src'] for img in soup.find_all('img', class_="note-slider-img") if img.get('src')]
+                  for parent in soup.find_all("span", class_="note-text")
+                  for span in parent.find_all("span")]
+    image_urls = extract_image_urls(soup)
     return {
         'text': ' '.join(span_texts),
         'image_urls': image_urls
     }
 
-def download_image(url):
-    response = requests.get(url)
-    return PIL.Image.open(BytesIO(response.content))
 
+def download_image(url):
+    if not url:
+        return None
+
+    normalized_url = url if not url.startswith("//") else f"https:{url}"
+    headers = {
+        "Referer": "https://www.xiaohongshu.com/",
+        "User-Agent": (
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/126.0.0.0 Safari/537.36"
+        ),
+        "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+    }
+
+    try:
+        response = requests.get(normalized_url, headers=headers, timeout=15)
+        response.raise_for_status()
+        content_type = response.headers.get("Content-Type", "")
+        if "image" not in content_type.lower():
+            current_app.logger.warning(
+                "Skipping non-image Xiaohongshu asset: %s (%s)",
+                normalized_url,
+                content_type,
+            )
+            return None
+
+        image = PIL.Image.open(BytesIO(response.content))
+        image.load()
+        return {
+            'url': normalized_url,
+            'content_type': content_type,
+            'base64': base64.b64encode(response.content).decode('ascii'),
+            'image': image,
+        }
+    except (requests.RequestException, UnidentifiedImageError, OSError) as exc:
+        current_app.logger.warning("Failed to download Xiaohongshu image %s: %s", normalized_url, exc)
+        return None

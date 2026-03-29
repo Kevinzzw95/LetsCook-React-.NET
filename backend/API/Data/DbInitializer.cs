@@ -189,30 +189,42 @@ namespace API.Data
                                 }
                             }
                         },
-                        //DishTypes = new[] { "lunch", "dinner", "main course" },
-                        ExtendedIngredients = @"[
+                        RecipeIngredients = new List<RecipeIngredient>
+                        {
+                            new RecipeIngredient
                             {
-                                ""Id"": 1001,
-                                ""Consistency"": ""solid"",
-                                ""Original"": ""8 oz fresh mozzarella"",
-                                ""Amount"": ""8.0"",
-                                ""Unit"": ""oz""
+                                IngredientId = 1001,
+                                Amount = "8.0",
+                                Unit = "oz",
+                                Consistency = "solid",
+                                Original = "8 oz fresh mozzarella",
+                                DisplayName = "fresh mozzarella",
+                                DisplayImage = "fresh-mozzarella.jpg",
+                                SortOrder = 0
                             },
+                            new RecipeIngredient
                             {
-                                ""Id"": 11529,
-                                ""Consistency"": ""solid"",
-                                ""Original"": ""2 ripe tomatoes"",
-                                ""Amount"": ""2.0"",
-                                ""Unit"": """"
+                                IngredientId = 11529,
+                                Amount = "2.0",
+                                Unit = "",
+                                Consistency = "solid",
+                                Original = "2 ripe tomatoes",
+                                DisplayName = "tomatoes",
+                                DisplayImage = "tomato.jpg",
+                                SortOrder = 1
                             },
+                            new RecipeIngredient
                             {
-                                ""Id"": 2044,
-                                ""Consistency"": ""solid"",
-                                ""Original"": ""Fresh basil leaves"",
-                                ""Amount"": ""6.0"",
-                                ""Unit"": ""leaves""
+                                IngredientId = 2044,
+                                Amount = "6.0",
+                                Unit = "leaves",
+                                Consistency = "solid",
+                                Original = "Fresh basil leaves",
+                                DisplayName = "fresh basil",
+                                DisplayImage = "basil.jpg",
+                                SortOrder = 2
                             }
-                        ]",
+                        },
                         Summary = "A classic Neapolitan pizza with fresh mozzarella, tomatoes, and basil.",
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow,
@@ -253,23 +265,31 @@ namespace API.Data
                                 }
                             }
                         },
-                        //DishTypes = new[] { "lunch", "dinner", "bowl" },
-                        ExtendedIngredients = @"[
+                        RecipeIngredients = new List<RecipeIngredient>
+                        {
+                            new RecipeIngredient
                             {
-                                ""Id"": 15076,
-                                ""Consistency"": ""solid"",
-                                ""Original"": ""2 6-oz salmon fillets"",
-                                ""Amount"": ""2.0"",
-                                ""Unit"": ""fillet""
+                                IngredientId = 15076,
+                                Amount = "2.0",
+                                Unit = "fillet",
+                                Consistency = "solid",
+                                Original = "2 6-oz salmon fillets",
+                                DisplayName = "salmon fillet",
+                                DisplayImage = "salmon.jpg",
+                                SortOrder = 0
                             },
+                            new RecipeIngredient
                             {
-                                ""Id"": 20444,
-                                ""Consistency"": ""solid"",
-                                ""Original"": ""1 cup rice"",
-                                ""Amount"": ""1.0"",
-                                ""Unit"": ""cup""
+                                IngredientId = 20444,
+                                Amount = "1.0",
+                                Unit = "cup",
+                                Consistency = "solid",
+                                Original = "1 cup rice",
+                                DisplayName = "rice",
+                                DisplayImage = "rice.jpg",
+                                SortOrder = 1
                             }
-                        ]",
+                        },
                         Summary = "A healthy and delicious salmon bowl with homemade teriyaki sauce.",
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow,
