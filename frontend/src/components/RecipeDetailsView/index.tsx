@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, Plus, Users, Utensils } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Plus, Users, Utensils } from 'lucide-react';
 import type { Ingredient } from '../../types/ingredient';
 import type { instruction } from '../../types/instruction';
 import '../../pages/RecipeDetails/recipe-details.scss';
@@ -41,6 +41,8 @@ const RecipeDetailsView = ({
     onDeleteRecipe,
     isDeletingRecipe = false
 }: Props) => {
+    const visibleThumbnailCount = 4;
+    const [isMobileViewport, setIsMobileViewport] = useState(false);
     const imageSources = useMemo(
         () =>
             (recipe.imageUrls ?? []).map((image) => ({
@@ -60,11 +62,48 @@ const RecipeDetailsView = ({
         };
     }, [imageSources]);
 
-    const [currentImage, setCurrentImage] = useState<string>(imageSources[0]?.src ?? '');
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
+    const [thumbnailStartIndex, setThumbnailStartIndex] = useState(0);
 
     useEffect(() => {
-        setCurrentImage(imageSources[0]?.src ?? '');
+        if (typeof window === 'undefined') {
+            return undefined;
+        }
+
+        const mediaQuery = window.matchMedia('(max-width: 576px)');
+        const updateViewportMode = () => setIsMobileViewport(mediaQuery.matches);
+
+        updateViewportMode();
+        mediaQuery.addEventListener('change', updateViewportMode);
+
+        return () => mediaQuery.removeEventListener('change', updateViewportMode);
+    }, []);
+
+    useEffect(() => {
+        setCurrentImageIndex(0);
+        setThumbnailStartIndex(0);
     }, [imageSources]);
+
+    useEffect(() => {
+        if (isMobileViewport) {
+            return;
+        }
+
+        const thumbnailEndIndex = thumbnailStartIndex + visibleThumbnailCount - 1;
+        if (currentImageIndex > thumbnailEndIndex) {
+            setThumbnailStartIndex(currentImageIndex - visibleThumbnailCount + 1);
+        }
+    }, [currentImageIndex, isMobileViewport, thumbnailStartIndex]);
+
+    const currentImage = imageSources[currentImageIndex]?.src ?? '';
+    const canSlideThumbnailsLeft = thumbnailStartIndex > 0;
+    const canSlideThumbnailsRight = thumbnailStartIndex + visibleThumbnailCount < imageSources.length;
+    const visibleThumbnails = isMobileViewport
+        ? imageSources
+        : imageSources.slice(
+            thumbnailStartIndex,
+            thumbnailStartIndex + visibleThumbnailCount
+        );
 
     const ingredientNames = useMemo(
         () =>
@@ -112,20 +151,58 @@ const RecipeDetailsView = ({
                             <>
                                 <img src={currentImage} alt={recipe.title} className="w-100 h-100 object-fit-cover" />
                                 <div
-                                    className="position-absolute bottom-0 justify-content-end start-0 w-100 p-3 bg-gradient-dark text-white d-flex gap-2 overflow-auto"
+                                    className="image-samll position-absolute bottom-0 start-0 w-100 p-3 bg-gradient-dark text-white"
                                     style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}
                                 >
-                                    {imageSources.map((image, index) => (
-                                        <button
-                                            key={`${image.src}-${index}`}
-                                            type="button"
-                                            className="rounded-2 overflow-hidden border border-white p-0 bg-transparent"
-                                            style={{ width: '60px', height: '60px', flexShrink: 0 }}
-                                            onClick={() => setCurrentImage(image.src)}
-                                        >
-                                            <img src={image.src} className="w-100 h-100 object-fit-cover" alt={`Thumbnail ${index + 1}`} />
-                                        </button>
-                                    ))}
+                                    <div className={`image-samll__carousel ${isMobileViewport ? 'image-samll__carousel--scroll' : ''}`}>
+                                        {!isMobileViewport && (
+                                            <button
+                                                type="button"
+                                                className="image-samll__arrow"
+                                                onClick={() => setThumbnailStartIndex((current) => Math.max(0, current - 1))}
+                                                disabled={!canSlideThumbnailsLeft}
+                                                aria-label="Show previous thumbnails"
+                                            >
+                                                <ChevronLeft size={18} />
+                                            </button>
+                                        )}
+
+                                        <div className={`image-samll__track ${isMobileViewport ? 'image-samll__track--scroll' : ''}`}>
+                                            {visibleThumbnails.map((image, index) => {
+                                                const actualIndex = isMobileViewport ? index : thumbnailStartIndex + index;
+                                                return (
+                                                    <button
+                                                        key={`${image.src}-${actualIndex}`}
+                                                        type="button"
+                                                        className={`image-samll__thumbnail ${actualIndex === currentImageIndex ? 'image-samll__thumbnail--active' : ''}`}
+                                                        onClick={() => setCurrentImageIndex(actualIndex)}
+                                                    >
+                                                        <img
+                                                            src={image.src}
+                                                            className="w-100 h-100 object-fit-cover"
+                                                            alt={`Thumbnail ${actualIndex + 1}`}
+                                                        />
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {!isMobileViewport && (
+                                            <button
+                                                type="button"
+                                                className="image-samll__arrow"
+                                                onClick={() =>
+                                                    setThumbnailStartIndex((current) =>
+                                                        Math.min(imageSources.length - visibleThumbnailCount, current + 1)
+                                                    )
+                                                }
+                                                disabled={!canSlideThumbnailsRight}
+                                                aria-label="Show next thumbnails"
+                                            >
+                                                <ChevronRight size={18} />
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </>
                         ) : (
@@ -236,13 +313,13 @@ const RecipeDetailsView = ({
                             <ul className='px-0'>
                                 {recipe.extendedIngredients.map((ingredient, index) => (
                                     <li className='ingredient-item d-flex justify-content-between align-items-center gap-2' key={`${ingredient.name}-${index}`}>
-                                        <span className='ingredient-name'>{ingredient.name}</span>
-                                        <span>{ingredient.amount} {String(ingredient.unit ?? '').toUpperCase()}</span>
+                                        <span className='col-4 ingredient-name'>{ingredient.name}</span>
+                                        <span className='col-3 text-center'>{ingredient.amount} {String(ingredient.unit ?? '').toUpperCase()}</span>
                                         {variant === 'page' && onAddItemToShoppingList && (
                                             <button
                                                 type="button"
                                                 onClick={() => onAddItemToShoppingList(ingredient)}
-                                                className='btn btn-sm border-0 rounded-pill px-3 d-flex align-items-center gap-2 fw-medium shadow-sm btn-sunny'
+                                                className='btn btn-sm col-auto border-0 rounded-pill px-3 d-flex align-items-center gap-2 shadow-sm btn-sunny'
                                             >
                                                 <Plus size={16} />
                                                 Shopping List

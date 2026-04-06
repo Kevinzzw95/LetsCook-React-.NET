@@ -14,6 +14,9 @@ load_dotenv(BASE_DIR / ".env")
 class Settings(BaseModel):
     api_key_gemini: Optional[str] = None
     xhs_cookies: Optional[str] = None
+    cloudinary_cloud_name: Optional[str] = None
+    cloudinary_api_key: Optional[str] = None
+    cloudinary_api_secret: Optional[str] = None
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
 
 
@@ -22,4 +25,7 @@ def get_settings() -> Settings:
     return Settings(
         api_key_gemini=os.environ.get("API_KEY_GEMINI"),
         xhs_cookies=os.environ.get("XHS_COOKIES"),
+        cloudinary_cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+        cloudinary_api_key=os.environ.get("CLOUDINARY_API_KEY"),
+        cloudinary_api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
     )

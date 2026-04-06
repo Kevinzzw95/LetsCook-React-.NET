@@ -44,7 +44,8 @@ export interface RecipeDraft {
     ingredients: Ingredient[],
     steps: Step[],
     sourceName?: string,
-    images?: (File | string)[]
+    images?: (File | string)[],
+    imageInfo?: Map<string, string>
 }
 
 export enum Tab {

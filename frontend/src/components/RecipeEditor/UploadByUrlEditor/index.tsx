@@ -38,7 +38,8 @@ const UploadByUrlEditor = () => {
                 preparationMinutes: res.preparationMinutes ?? res.prepTime ?? 0,
                 ingredients: res.ingredients ?? [],
                 steps: normalizeSteps(res.steps),
-                images: res.images ?? []
+                images: res.images ?? [],
+                imageInfo: res.imageInfo ?? null
             }).unwrap();
 
             setUrlError("");

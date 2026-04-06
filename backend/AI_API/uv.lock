@@ -298,6 +298,20 @@ wheels = [
 ]
 
 [[package]]
+name = "cloudinary"
+version = "1.44.1"
+source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
+dependencies = [
+    { name = "certifi" },
+    { name = "six" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://pypi.tuna.tsinghua.edu.cn/packages/32/35/938a4cc3b5ac386184a8ea50e357cdbb4239c2744fc8c652c461674447e6/cloudinary-1.44.1.tar.gz", hash = "sha256:62d4374b79d5476de2a86cb6a1da709a5429e02aef474bfc5d99f3e38a1a62ff", size = 188225, upload-time = "2025-06-17T16:31:33.279Z" }
+wheels = [
+    { url = "https://pypi.tuna.tsinghua.edu.cn/packages/86/f0/518d151d3dfc009940947fe9b26cdf9f6e2fb9e4a29c12fe5b5ebe8aad65/cloudinary-1.44.1-py3-none-any.whl", hash = "sha256:b4785031179a5ec7010f46665e5c8fad2cae022c18405546f01d257e02f78b1c", size = 147808, upload-time = "2025-06-17T16:31:32.188Z" },
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.tuna.tsinghua.edu.cn/simple" }
@@ -882,6 +896,7 @@ dependencies = [
     { name = "asyncmy" },
     { name = "asyncpg" },
     { name = "beautifulsoup4" },
+    { name = "cloudinary" },
     { name = "cryptography" },
     { name = "fastapi" },
     { name = "google-genai" },
@@ -922,6 +937,7 @@ requires-dist = [
     { name = "asyncmy", specifier = ">=0.2.10" },
     { name = "asyncpg", specifier = ">=0.31.0" },
     { name = "beautifulsoup4" },
+    { name = "cloudinary" },
     { name = "cryptography", specifier = ">=45.0.7" },
     { name = "fastapi", specifier = "==0.110.2" },
     { name = "google-genai" },

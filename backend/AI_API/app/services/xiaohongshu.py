@@ -1,15 +1,20 @@
 import base64
 import logging
 import re
+from uuid import uuid4
 from io import BytesIO
 from pathlib import Path
 from typing import Optional
 
 import PIL.Image
+import cloudinary
+import cloudinary.uploader
 import requests
 from bs4 import BeautifulSoup
 from PIL import UnidentifiedImageError
 from playwright.sync_api import sync_playwright
+
+from app.core.config import get_settings
 
 
 logger = logging.getLogger(__name__)
@@ -189,3 +194,40 @@ def download_image(url):
     except (requests.RequestException, UnidentifiedImageError, OSError) as exc:
         logger.warning("Failed to download Xiaohongshu image %s: %s", normalized_url, exc)
         return None
+
+
+def upload_images_to_cloudinary(downloaded_images):
+    if not downloaded_images:
+        return {}
+
+    settings = get_settings()
+    if not (
+        settings.cloudinary_cloud_name
+        and settings.cloudinary_api_key
+        and settings.cloudinary_api_secret
+    ):
+        raise RuntimeError("Cloudinary credentials are not configured")
+
+    cloudinary.config(
+        cloud_name=settings.cloudinary_cloud_name,
+        api_key=settings.cloudinary_api_key,
+        api_secret=settings.cloudinary_api_secret,
+        secure=True,
+    )
+
+    image_info = {}
+    for item in downloaded_images:
+        upload_result = cloudinary.uploader.upload(
+            f"data:{item['content_type']};base64,{item['base64']}",
+            folder="letscook/recipe-imports",
+            public_id=f"xhs-import-{uuid4().hex}",
+            overwrite=False,
+            resource_type="image",
+        )
+
+        public_id = upload_result.get("public_id")
+        secure_url = upload_result.get("secure_url")
+        if public_id and secure_url:
+            image_info[public_id] = secure_url
+
+    return image_info

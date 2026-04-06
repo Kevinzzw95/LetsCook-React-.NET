@@ -11,7 +11,10 @@ namespace API.RequestHelpers
     public class MappingProfiles : Profile
     {
         public MappingProfiles() {
-            CreateMap<CreateRecipeDto, Recipe>();
+            CreateMap<CreateRecipeDto, Recipe>()
+                .ForMember(dest => dest.ImageInfo, opt => opt.Ignore())
+                .ForMember(dest => dest.Instructions, opt => opt.Ignore())
+                .ForMember(dest => dest.RecipeIngredients, opt => opt.Ignore());
         }
     }
 }

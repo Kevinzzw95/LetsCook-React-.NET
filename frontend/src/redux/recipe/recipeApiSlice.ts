@@ -177,7 +177,7 @@ function createFormData(item: FieldValues) {
                     formData.append("images", file);
                 }
             });
-        } else if(key === 'ingredients' || key === 'steps') {
+        } else if(key === 'ingredients' || key === 'steps' || key === 'imageInfo') {
 			formData.append(key, JSON.stringify(item[key]));
 		} else if (key === 'type') {
             formData.append('dishType', item[key] ?? '');

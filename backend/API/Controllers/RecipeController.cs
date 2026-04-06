@@ -375,6 +375,10 @@ namespace API.Controllers
                 createRecipeDto.ExistingImageUrls ?? "[]",
                 new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
             ) ?? [];
+            var uploadedImageInfo = JsonSerializer.Deserialize<Dictionary<string, string>>(
+                createRecipeDto.ImageInfo ?? "{}",
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            ) ?? null;
 
             var removedImageKeys = recipe.ImageInfo
                 .Where(image => !keptImageUrls.Contains(image.Value))
@@ -401,6 +405,12 @@ namespace API.Controllers
                     if (imageResult.Error != null) throw new InvalidOperationException(imageResult.Error.Message);
 
                     recipe.ImageInfo[imageResult.PublicId] = imageResult.SecureUrl.ToString();
+                }
+            } else if (uploadedImageInfo != null)
+            {
+                foreach (var image in uploadedImageInfo)
+                {
+                    recipe.ImageInfo[image.Key] = image.Value;
                 }
             }
 

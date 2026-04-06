@@ -14,6 +14,7 @@ from app.services.xiaohongshu import (
     extract_first_url,
     is_xiaohongshu_url,
     resolve_url_redirects,
+    upload_images_to_cloudinary,
 )
 
 
@@ -28,12 +29,16 @@ def _normalize_image_urls(image_list) -> List[str]:
         try:
             image_list = json.loads(image_list)
         except json.JSONDecodeError:
-            return []
+            image_list = [
+                item.strip()
+                for item in image_list.split(",")
+                if item.strip()
+            ]
 
     normalized_urls: List[str] = []
     for item in image_list:
         if isinstance(item, str):
-            normalized_urls.append(item)
+            normalized_urls.append(item.strip())
             continue
 
         if isinstance(item, dict):
@@ -108,9 +113,9 @@ async def generate_recipe_url(payload: GenerateRecipeUrlPayload):
     downloaded_images = [item for url in image_urls if (item := download_image(url))]
     images = [item["image"] for item in downloaded_images]
     note_text = f"{note_detail.get('title', '')} {note_detail.get('desc', '')}".strip()
-    query = ["Extract the steps of the recipe from this text:", note_text]
+    query = ["Extract the steps of the recipe from this text:", note_text, "output in English"]
 
-    """ if images:
+    if images:
         query.extend(
             [
                 "Then extract the steps from pictures:",
@@ -124,14 +129,6 @@ async def generate_recipe_url(payload: GenerateRecipeUrlPayload):
         )
 
     recipe_payload = generate_recipe_json(query)
-    recipe_payload["images"] = [
-        {
-            "url": item["url"],
-            "contentType": item["content_type"],
-            "base64": item["base64"],
-        }
-        for item in downloaded_images
-    ]
-    recipe_payload["note_detail"] = note_detail 
-    return recipe_payload"""
-    return query
+    recipe_payload["imageInfo"] = upload_images_to_cloudinary(downloaded_images)
+    recipe_payload["note_detail"] = note_detail
+    return recipe_payload

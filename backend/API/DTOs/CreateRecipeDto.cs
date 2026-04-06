@@ -13,6 +13,7 @@ namespace API.DTOs
         [Length(0, 300)]
         public string Title { get; set; }
         public List<IFormFile> Images { get; set; }
+        public string ImageInfo { get; set; }
         public string ExistingImageUrls { get; set; }
         public int Servings { get; set; }
         public int PreparationMinutes { get; set; }

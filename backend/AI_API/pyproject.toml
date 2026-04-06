@@ -12,6 +12,7 @@ dependencies = [
     "alembic>=1.16.5",
     "asyncmy>=0.2.10",
     "beautifulsoup4",
+    "cloudinary",
     "cryptography>=45.0.7",
     "fastapi==0.110.2",
     "google-genai",

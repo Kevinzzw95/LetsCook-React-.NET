@@ -76,6 +76,10 @@
             .ingredient-name {
                 text-transform: capitalize;
             }
+            .btn {
+                font-size: 11px;
+                font-weight: 800;
+            }
         }
         .recipe-detail-nutrition {
             text-align: center;
@@ -99,6 +103,104 @@
             font-weight: 700;
             font-size: 18px;
             color: white;
+        }
+    }
+}
+
+.image-samll {
+    .image-samll__carousel {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .image-samll__track {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.5rem;
+        flex: 1;
+    }
+
+    .image-samll__arrow {
+        width: 2.25rem;
+        height: 2.25rem;
+        border: 1px solid rgba(255, 255, 255, 0.35);
+        border-radius: 999px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(15, 23, 42, 0.55);
+        color: white;
+        transition: opacity 0.2s ease, transform 0.2s ease, background 0.2s ease;
+
+        &:hover:not(:disabled) {
+            background: rgba(15, 23, 42, 0.75);
+            transform: translateY(-1px);
+        }
+
+        &:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+    }
+
+    .image-samll__thumbnail {
+        width: 100%;
+        aspect-ratio: 1;
+        border-radius: 0.75rem;
+        overflow: hidden;
+        border: 2px solid transparent;
+        padding: 0;
+        background: transparent;
+        opacity: 0.72;
+        transition: opacity 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+
+        &:hover {
+            opacity: 1;
+            transform: translateY(-1px);
+        }
+    }
+
+    .image-samll__thumbnail--active {
+        border-color: white;
+        opacity: 1;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.3);
+    }
+}
+
+@media (max-width: 576px) {
+    .image-samll {
+        .image-samll__carousel {
+            gap: 0.35rem;
+        }
+
+        .image-samll__track {
+            gap: 0.35rem;
+        }
+
+        .image-samll__track--scroll {
+            display: flex;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scroll-snap-type: x proximity;
+            padding-bottom: 0.15rem;
+            -webkit-overflow-scrolling: touch;
+
+            &::-webkit-scrollbar {
+                display: none;
+            }
+        }
+
+        .image-samll__thumbnail {
+            min-width: 3.75rem;
+            width: 3.75rem;
+            flex: 0 0 auto;
+            scroll-snap-align: start;
+        }
+
+        .image-samll__arrow {
+            width: 2rem;
+            height: 2rem;
         }
     }
 }
