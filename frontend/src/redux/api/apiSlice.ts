@@ -24,18 +24,29 @@ const baseQueryWithReauth: BaseQueryFn = async (args, api, extraOptions) => {
     if (result?.error?.status === 401) {
         console.log('sending refresh token');
         const refreshToken = (api.getState() as RootState).auth.refreshToken;
+
+        if (!refreshToken) {
+            api.dispatch(logOut());
+            return result;
+        }
+
         // send refresh token to get new access token 
         const refreshResult = await baseQuery({
-            url: '/auth/refresh',
+            url: 'account/refresh',
             method: 'POST',
             body: { refreshToken }
         }, api, extraOptions);
         console.log(refreshResult)
         if (refreshResult?.data) {
             const data = refreshResult.data as AuthResponse;
-            const user = (api.getState() as RootState).auth.user;
+            const state = api.getState() as RootState;
+            const user = data.username ?? state.auth.user;
             // store the new token 
-            api.dispatch(setCredentials({ token: data.token, refreshToken, user }));
+            api.dispatch(setCredentials({
+                token: data.token,
+                refreshToken: data.refreshToken ?? refreshToken,
+                user
+            }));
             // retry the original query with new access token 
             result = await baseQuery(args, api, extraOptions);
         } else {

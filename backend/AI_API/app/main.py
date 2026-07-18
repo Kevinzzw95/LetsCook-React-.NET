@@ -9,6 +9,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.api.router import api_router
 from app.core.config import get_settings
+from app.core.observability import configure_langsmith
 
 
 WEBUI_DIR = os.path.join(os.path.dirname(__file__), "api", "webui")
@@ -16,6 +17,7 @@ WEBUI_DIR = os.path.join(os.path.dirname(__file__), "api", "webui")
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    configure_langsmith(settings)
     app = FastAPI(title="LetsCook AI API", version="1.0.0")
 
     app.add_middleware(

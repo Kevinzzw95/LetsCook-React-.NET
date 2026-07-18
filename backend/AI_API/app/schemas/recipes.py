@@ -17,6 +17,7 @@ class Step(BaseModel):
 class Recipe(BaseModel):
     title: str
     ingredients: List[Ingredient]
+    ingredientsEn: List[Ingredient]
     steps: List[Step]
     servings: int
 

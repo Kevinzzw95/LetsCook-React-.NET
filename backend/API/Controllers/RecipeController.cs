@@ -155,9 +155,12 @@ namespace API.Controllers
             recipe.UserId = userId;
             var steps = DeserializeSteps(createRecipeDto.Steps);
             var ingredients = DeserializeIngredients(createRecipeDto.Ingredients);
+            var ingredientsEn = string.IsNullOrWhiteSpace(createRecipeDto.IngredientsEn)
+                ? ingredients
+                : DeserializeIngredients(createRecipeDto.IngredientsEn);
 
             await ApplyRecipeFormData(recipe, createRecipeDto, steps, ingredients);
-            await _nutritionCalculationService.PopulateNutritionAsync(recipe, ingredients);
+            await _nutritionCalculationService.PopulateNutritionAsync(recipe, ingredientsEn);
 
             _context.Recipes.Add(recipe);
 
@@ -199,9 +202,12 @@ namespace API.Controllers
             recipe.UpdatedAt = DateTime.UtcNow;
             var steps = DeserializeSteps(createRecipeDto.Steps);
             var ingredients = DeserializeIngredients(createRecipeDto.Ingredients);
+            var ingredientsEn = string.IsNullOrWhiteSpace(createRecipeDto.IngredientsEn)
+                ? ingredients
+                : DeserializeIngredients(createRecipeDto.IngredientsEn);
 
             await ApplyRecipeFormData(recipe, createRecipeDto, steps, ingredients);
-            await _nutritionCalculationService.PopulateNutritionAsync(recipe, ingredients);
+            await _nutritionCalculationService.PopulateNutritionAsync(recipe, ingredientsEn);
 
             var result = await _context.SaveChangesAsync() > 0;
             if (result) return Ok(recipe.Id);

@@ -299,7 +299,7 @@ const MealPlans = () => {
                             </div>
                         </div>
 
-                        <div>
+                        {/* <div>
                             <label htmlFor="recipeId" className="form-label fw-semibold">Recipe</label>
                             <select
                                 id="recipeId"
@@ -320,7 +320,7 @@ const MealPlans = () => {
                         <button type="submit" className="btn btn-sunny rounded-pill fw-semibold" disabled={!selectedRecipeId || isSaving}>
                             <Plus size={18} className="me-2" />
                             {isSaving ? 'Saving...' : 'Save to calendar'}
-                        </button>
+                        </button> */}
                     </form>
 
                     <div className="d-flex flex-column gap-3">

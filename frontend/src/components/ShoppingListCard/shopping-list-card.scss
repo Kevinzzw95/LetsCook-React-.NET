@@ -1,5 +1,5 @@
 .qty-input {
-    width: 50px;
+    width: 40px;
     position: relative;
 }
 .unit-selector {
@@ -9,15 +9,19 @@
     }
 }
 .store-input {
-    width: 100px;
+    width: 90px;
     position: relative;
     font-size: 14px;
 }
 .bought-button {
-    width: 28px;
-    height: 28px;
+    width: 22px;
+    height: 22px;
 }
 .mutation-button {
     width: 30px;
     height: 30px;
+    @media (max-width: 576px) {
+        width: 25px;
+        height: 25px;
+    }
 }

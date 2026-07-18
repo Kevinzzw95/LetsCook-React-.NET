@@ -27,11 +27,19 @@ namespace API.Controllers
                 return Unauthorized();
             }
 
+            var refreshToken = _tokenService.CreateRefreshToken();
+
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.UtcNow.AddDays(7);
+
+            await _userManager.UpdateAsync(user);
+
             return new UserDto
             {
                 Username = user.UserName,
                 Email = user.Email,
-                Token = await _tokenService.GenerateToken(user)
+                Token = await _tokenService.GenerateToken(user),
+                RefreshToken = refreshToken
             };
         }
 

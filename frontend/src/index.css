@@ -1,8 +1,10 @@
-@import url('https://fonts.googleapis.com');
-@import url('https://fonts.gstatic.com');
-@import url('https://fonts.googleapis.com/css2?family=Kosugi+Maru&family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+
 :root {
-  font-family: "Montserrat", sans-serif;
+  --default-font: "Outfit", sans-serif;
+  --heading-font: "Outfit", sans-serif;
+  --nav-font: "Outfit", sans-serif;
+  font-family: "Outfit", sans-serif;
   line-height: 1.5;
   font-weight: 400;
 

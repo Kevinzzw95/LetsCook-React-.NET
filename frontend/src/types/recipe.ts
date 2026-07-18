@@ -42,6 +42,7 @@ export interface RecipeDraft {
     diet?: string,
     prepTime?: number,
     ingredients: Ingredient[],
+    ingredientsEn: Ingredient[],
     steps: Step[],
     sourceName?: string,
     images?: (File | string)[],

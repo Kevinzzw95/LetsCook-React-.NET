@@ -1,10 +1,14 @@
 body {
-	font-family: 'Inter', sans-serif;
-	background: linear-gradient(120deg, #f6d365 0%, #fda085 100%);
+	font-family: "Outfit", sans-serif;
+	background: #f8fafc;
 	min-height: 100vh;
 	display: flex;
 	align-items: start;
 	justify-content: center;
+
+	&.modal-open {
+		overflow: hidden;
+	}
 	
 	#root {
 		width: 100%;

@@ -171,7 +171,7 @@ const EditRecipe = () => {
                 <div className="card-glass d-flex flex-column w-100 newrecipe-container">
                     <FormProvider {...methods}>
                         <form id="createRecipe" onSubmit={handleSubmit(handleSubmitData)}>
-                            <div className="d-flex flex-column flex-md-row align-items-center justify-content-center p-3 bg-light border-bottom gap-3">
+                            <div className="d-flex flex-column flex-md-row align-items-center justify-content-center p-3 border-bottom gap-3">
                                 <ul className="col-8 nav nav-pills nav-fill">
                                     {
                                         tabs.map((tab) => { 

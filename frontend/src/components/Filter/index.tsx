@@ -1,6 +1,7 @@
 import './filter.scss';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faXmark, faLeaf } from '@fortawesome/free-solid-svg-icons';
+import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import { useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { REFINEMENTS } from '../../constants';
 import { RefinementCounts } from '../../types/refinements';
@@ -16,6 +17,29 @@ type Props = {
 const Filter = ({ isOpenMobileFilter, openFilter, resultCount, counts }: Props) => {
 
     const [ searchParams, setSearchParams ] = useSearchParams();
+
+    useEffect(() => {
+        if (!isOpenMobileFilter) return;
+
+        const scrollY = window.scrollY;
+        const originalPosition = document.body.style.position;
+        const originalTop = document.body.style.top;
+        const originalWidth = document.body.style.width;
+        const originalOverflow = document.body.style.overflow;
+
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${scrollY}px`;
+        document.body.style.width = '100%';
+        document.body.style.overflow = 'hidden';
+
+        return () => {
+            document.body.style.position = originalPosition;
+            document.body.style.top = originalTop;
+            document.body.style.width = originalWidth;
+            document.body.style.overflow = originalOverflow;
+            window.scrollTo(0, scrollY);
+        };
+    }, [isOpenMobileFilter]);
 
     const clickFilterHandler = (filterName: string, filterValue: string) => {
         const valueCount = counts[filterName]?.[filterValue] ?? 0;

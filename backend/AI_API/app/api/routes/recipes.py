@@ -113,7 +113,8 @@ async def generate_recipe_url(payload: GenerateRecipeUrlPayload):
     downloaded_images = [item for url in image_urls if (item := download_image(url))]
     images = [item["image"] for item in downloaded_images]
     note_text = f"{note_detail.get('title', '')} {note_detail.get('desc', '')}".strip()
-    query = ["Extract the steps of the recipe from this text:", note_text, "output in English"]
+    query = ["Extract the steps of the recipe from this text:", note_text, "output in original language,"
+        "for ingredients, output in original language in ingredients, and in English in ingredientsEn"]
 
     if images:
         query.extend(

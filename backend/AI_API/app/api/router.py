@@ -2,11 +2,13 @@ import logging
 
 from fastapi import APIRouter
 
+from app.api.routes.chat import router as chat_router
 from app.api.routes.recipes import router as recipes_router
 
 
 logger = logging.getLogger(__name__)
 api_router = APIRouter()
+api_router.include_router(chat_router)
 api_router.include_router(recipes_router)
 
 try:

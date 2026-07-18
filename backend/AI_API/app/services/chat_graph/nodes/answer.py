@@ -1,0 +1,54 @@
+from fastapi import HTTPException
+from langchain_core.messages import SystemMessage
+from langchain_openai import ChatOpenAI
+
+from app.core.config import get_settings
+from app.services.chat_graph.state import ChatGraphState, ensure_system_message
+
+
+def _build_context(state: ChatGraphState) -> str:
+    context_lines: list[str] = []
+
+    intent = state.get("intent")
+    if intent:
+        context_lines.append(f"Detected user intent: {intent}.")
+
+    search_sources = state.get("search_sources", [])
+    if search_sources:
+        context_lines.append(f"Selected search sources: {', '.join(search_sources)}.")
+
+    recipe_attributes = state.get("recipe_attributes", {})
+    if recipe_attributes:
+        context_lines.append(f"Extracted recipe attributes: {recipe_attributes}.")
+
+    nutrition_notes = state.get("nutrition_notes", [])
+    if nutrition_notes:
+        context_lines.append("Nutrition notes: " + " ".join(nutrition_notes))
+
+    health_notes = state.get("health_notes", [])
+    if health_notes:
+        context_lines.append("Health notes: " + " ".join(health_notes))
+
+    ranked_results = state.get("ranked_results", [])
+    if ranked_results:
+        context_lines.append(f"Retrieved {len(ranked_results)} candidate result(s) from tools.")
+
+    return "\n".join(context_lines)
+
+
+async def answer(state: ChatGraphState) -> ChatGraphState:
+    settings = get_settings()
+    llm = ChatOpenAI(model=settings.openai_model, api_key=settings.openai_api_key)
+    messages = ensure_system_message(state.get("messages", []))
+    context = _build_context(state)
+
+    if context:
+        messages = [*messages, SystemMessage(content=context)]
+
+    response = await llm.ainvoke(messages)
+    if not response.content:
+        raise HTTPException(status_code=502, detail="OpenAI returned an empty response")
+
+    return {
+        "messages": [response],
+    }

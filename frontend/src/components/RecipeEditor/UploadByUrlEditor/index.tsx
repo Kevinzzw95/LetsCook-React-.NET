@@ -37,6 +37,7 @@ const UploadByUrlEditor = () => {
                 diet: res.diet ?? "",
                 preparationMinutes: res.preparationMinutes ?? res.prepTime ?? 0,
                 ingredients: res.ingredients ?? [],
+                ingredientsEn: res.ingredientsEn ?? [],
                 steps: normalizeSteps(res.steps),
                 images: res.images ?? [],
                 imageInfo: res.imageInfo ?? null

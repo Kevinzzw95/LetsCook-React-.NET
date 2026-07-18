@@ -75,7 +75,7 @@ const ShoppingList = () => {
                         onChange={(e) => setNewItemName(e.target.value)}
                     />
                     <button type="submit" className="btn btn-sunny rounded-circle p-2 shadow-sm flex-shrink-0" style={{ width: '42px', height: '42px' }}>
-                        <Plus size={20} />
+                        <Plus size={24} />
                     </button>
                 </form>
             </div>
@@ -134,7 +134,7 @@ const ShoppingList = () => {
                                 </div>
                             ) : (
                                 filteredItems.map(item => (
-                                    <div key={item.itemId} className="col-md-6 card-glass py-2 px-3 d-flex flex-column flex-md-row gap-3 align-items-md-center animate-fade-in">
+                                    <div key={item.itemId} className="col-md-6 card-glass gap-3 align-items-md-center animate-fade-in">
                                         <ShoppingListCard item={item} updateItem={updateItem} deleteItem={deleteItem}/>
                                     </div>
                                 ))

@@ -1,7 +1,7 @@
 import { Clock, Trash2, Users } from 'lucide-react';
 import { recipeCommon } from '../../types/recipe';
 import './recipe-card.scss';
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 type Props = {
     recipe: Partial<recipeCommon>;
@@ -10,11 +10,31 @@ type Props = {
 }
 
 const RecipeCard = ({ recipe, onDelete, isDeleting = false } : Props) => {
+    const navigate = useNavigate();
+
+    const goToRecipeDetails = () => {
+        if (!recipe.id) return;
+        navigate(`/recipe-details/${recipe.id}`);
+    };
+
+    const handleCardKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+            event.preventDefault();
+            goToRecipeDetails();
+        }
+    };
     
     return (
-        <div key={recipe.id} className="col-md-6 col-xl-4 animate-fade-in">
-            <div className="card h-100 border-0 shadow-sm rounded-4 overflow-hidden hover-scale">
-                <div className="position-relative" style={{ height: '200px' }}>
+        <div key={recipe.id} className="col-md-4 col-xl-3 animate-fade-in">
+            <div
+                className="card recipe-card-clickable h-100 border-0 shadow-sm rounded-4 overflow-hidden hover-scale"
+                onClick={goToRecipeDetails}
+                onKeyDown={handleCardKeyDown}
+                role="link"
+                tabIndex={0}
+                aria-label={`View details for ${recipe.title ?? 'recipe'}`}
+            >
+                <div className="position-relative" style={{ height: '250px' }}>
                 <img 
                     src={recipe.imageUrls && recipe.imageUrls[0]} 
                     alt={recipe.title} 
@@ -32,15 +52,19 @@ const RecipeCard = ({ recipe, onDelete, isDeleting = false } : Props) => {
                 
                 <div className="card-body p-4 d-flex flex-column">
                     {onDelete && (
-                        <div className="d-flex justify-content-end mb-3">
+                        <div className="d-flex justify-content-between mb-3">
+                            <div>{recipe.title}</div>
                             <button
                                 type="button"
                                 className="recipe-card-delete btn btn-light border-0 rounded-pill d-inline-flex align-items-center gap-2"
-                                onClick={() => onDelete(recipe)}
-                                disabled={isDeleting}
+                                onClick={(event) => {
+                                    event.stopPropagation();
+                                    onDelete(recipe);
+                                }}
+                                disabled={isDeleting} 
                             >
                                 <Trash2 size={14} />
-                                {isDeleting ? 'Deleting...' : 'Delete'}
+
                             </button>
                         </div>
                     )}
@@ -55,7 +79,7 @@ const RecipeCard = ({ recipe, onDelete, isDeleting = false } : Props) => {
                         {recipe.description}
                     </p>*/}
 
-                    <div className="d-flex align-items-center gap-3 text-secondary small mb-3">
+                    <div className="d-flex align-items-center gap-3 text-secondary small mb-2">
                         <div className="d-flex align-items-center gap-1">
                             <Clock size={14} /> {recipe.preparationMinutes}
                         </div>
@@ -67,7 +91,7 @@ const RecipeCard = ({ recipe, onDelete, isDeleting = false } : Props) => {
                         </div>
                     </div>
 
-                    <div className="d-flex gap-1 flex-wrap mb-3">
+                    <div className="d-flex gap-1 flex-wrap">
                         {recipe.diet && recipe.diet !== 'None' && (
                             <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 fw-normal">
                                 {recipe.diet}
@@ -78,12 +102,6 @@ const RecipeCard = ({ recipe, onDelete, isDeleting = false } : Props) => {
                         </span>
                     </div>
 
-                    <Link to={`/recipe-details/${recipe.id}`}
-                        type='button'
-                        className="btn btn-outline-sunny w-100 rounded-pill fw-medium mt-auto"
-                    >
-                        View Recipe
-                    </Link>
                 </div>
             </div>
         </div>

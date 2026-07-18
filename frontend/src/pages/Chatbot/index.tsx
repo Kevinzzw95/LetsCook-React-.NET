@@ -1,5 +1,7 @@
-import { ArrowRight, Bot, ChefHat, MessageSquareText, Sparkles } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Bot, ChefHat, MessageSquareText, Send, Sparkles, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useChatMutation } from '../../redux/api/aiApiSlice';
 import './chatbot.scss';
 
 const starterPrompts = [
@@ -8,9 +10,73 @@ const starterPrompts = [
     'Turn my saved recipes into a quick grocery list'
 ];
 
+type ChatMessage = {
+    role: 'user' | 'bot';
+    text: string;
+};
+
 const Chatbot = () => {
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [chatInput, setChatInput] = useState('');
+    const [chat, { isLoading: isChatLoading }] = useChatMutation();
+    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+        {
+            role: 'bot',
+            text: 'Hi, I am Chef Bot. Ask me for meal ideas, substitutions, or help turning ingredients into dinner.'
+        }
+    ]);
+
+    const openChatRoom = () => setIsChatOpen(true);
+    const closeChatRoom = () => setIsChatOpen(false);
+
+    useEffect(() => {
+        document.body.classList.toggle('modal-open', isChatOpen);
+
+        return () => {
+            document.body.classList.remove('modal-open');
+        };
+    }, [isChatOpen]);
+
+    const sendMessage = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        const trimmedMessage = chatInput.trim();
+        if (!trimmedMessage) return;
+
+        const nextMessages: ChatMessage[] = [
+            ...chatMessages,
+            { role: 'user', text: trimmedMessage }
+        ];
+
+        setChatMessages(nextMessages);
+        setChatInput('');
+
+        try {
+            const response = await chat({
+                message: trimmedMessage,
+                history: chatMessages.map(message => ({
+                    role: message.role === 'bot' ? 'assistant' : 'user',
+                    content: message.text
+                }))
+            }).unwrap();
+
+            setChatMessages(currentMessages => [
+                ...currentMessages,
+                { role: 'bot', text: response.reply }
+            ]);
+        } catch {
+            setChatMessages(currentMessages => [
+                ...currentMessages,
+                {
+                    role: 'bot',
+                    text: 'I could not reach Chef Bot right now. Please check the AI API server and OpenAI configuration.'
+                }
+            ]);
+        }
+    };
+
     return (
-        <div className="container-fluid py-4 chatbot-page animate-fade-in">
+        <div className={`container-fluid py-4 chatbot-page animate-fade-in ${isChatOpen ? 'chat-open' : ''}`}>
             <div className="card-glass chatbot-hero p-3 p-lg-4 mb-3 mb-lg-4">
                 <div className="row g-4 align-items-center">
                     <div className="col-lg-7">
@@ -48,11 +114,14 @@ const Chatbot = () => {
                                 Try a sheet-pan salmon dinner with roasted asparagus and lemon garlic potatoes. I can also
                                 turn that into a full recipe draft next.
                             </div>
-                            <div className="chatbot-composer">
+                            <button
+                                type="button"
+                                className="btn btn-sunny chatbot-start-button"
+                                onClick={openChatRoom}
+                            >
                                 <MessageSquareText size={18} />
-                                <span>Future chat input area</span>
-                                <ArrowRight size={16} />
-                            </div>
+                                Start chatting
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -82,7 +151,10 @@ const Chatbot = () => {
 
                         <div className="chatbot-prompt-list">
                             {starterPrompts.map((prompt) => (
-                                <button key={prompt} type="button" className="chatbot-prompt-chip">
+                                <button key={prompt} type="button" className="chatbot-prompt-chip" onClick={() => {
+                                    setChatInput(prompt);
+                                    openChatRoom();
+                                }}>
                                     <Sparkles size={16} />
                                     <span>{prompt}</span>
                                 </button>
@@ -91,6 +163,58 @@ const Chatbot = () => {
                     </div>
                 </div>
             </div>
+
+            {isChatOpen && (
+                <div className="chatbot-room-modal" role="dialog" aria-modal="true" aria-labelledby="chatbot-room-title">
+                    <div className="chatbot-room-backdrop" onClick={closeChatRoom}></div>
+                    <div className="chatbot-room-panel">
+                        <div className="chatbot-room-header">
+                            <div className="chatbot-preview-badge">
+                                <Bot size={20} />
+                                <div>
+                                    <h2 id="chatbot-room-title" className="chatbot-room-title">Chef Bot</h2>
+                                    <span>Kitchen assistant</span>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                className="chatbot-room-close"
+                                onClick={closeChatRoom}
+                                aria-label="Close chat room"
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        <div className="chatbot-room-messages">
+                            {chatMessages.map((message, index) => (
+                                <div
+                                    key={`${message.role}-${index}`}
+                                    className={`chatbot-room-message chatbot-room-message-${message.role}`}
+                                >
+                                    {message.text}
+                                </div>
+                            ))}
+                        </div>
+
+                        <form className="chatbot-room-composer" onSubmit={sendMessage}>
+                            <label className="visually-hidden" htmlFor="chatbot-room-input">
+                                Message Chef Bot
+                            </label>
+                            <input
+                                id="chatbot-room-input"
+                                type="text"
+                                value={chatInput}
+                                onChange={(event) => setChatInput(event.target.value)}
+                                placeholder="Ask what to cook next"
+                            />
+                            <button type="submit" aria-label="Send message" disabled={isChatLoading}>
+                                <Send size={18} />
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

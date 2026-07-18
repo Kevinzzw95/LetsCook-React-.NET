@@ -30,5 +30,6 @@ namespace API.DTOs
         public string UserId { get; set; }
         [Required]
         public string Ingredients { get; set; }
+        public string IngredientsEn { get; set; }
     }
 }

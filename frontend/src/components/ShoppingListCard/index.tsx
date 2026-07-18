@@ -46,18 +46,18 @@ const ShoppingListCard = ({item, updateItem, deleteItem}: Props) => {
     };
 
     return (
-        <>
+        <div className="d-flex flex-row py-2 px-2 px-md-3">
             {/* Checkbox & Name */}
             <div className="d-flex align-items-center gap-2 gap-md-3 flex-grow-1">
                 <button 
                     onClick={() => toggleBought(item)}
                     className={`bought-button btn p-0 rounded-circle d-flex align-items-center justify-content-center border-2 transition-all flex-shrink-0 ${item.bought ? 'btn-success border-success' : 'btn-outline-secondary border-secondary-subtle'}`}
                 >
-                    {item.isBought ? <Check size={16} /> : <Circle size={16} className="text-transparent" />}
+                    {item.isBought ? <Check size={14} /> : <Circle size={14} className="text-transparent" />}
                 </button>
                 {/* <img src="../img/Tomato.jpg" className="shopping-list-image object-fit-cover border rounded" alt="" /> */}
                 <div>
-                    <p className={`m-0 fw-bold text-dark fs-5 ${item.isBought ? 'text-decoration-line-through text-muted' : ''}`}>
+                    <p className={`m-0 fw-bold text-dark fs-6 fs-md-5 ${item.isBought ? 'text-decoration-line-through text-muted' : ''}`}>
                         {item.name}
                     </p>
                 </div>
@@ -68,10 +68,10 @@ const ShoppingListCard = ({item, updateItem, deleteItem}: Props) => {
                 {
                     isEditMode ? 
                     <>
-                        <div className="input-group input-group-sm qty-input">
+                        <div className="input-group input-group-sm qty-input px-0">
                             <input 
                                 type="text" 
-                                className="form-control border-end-0 bg-white" 
+                                className="form-control bg-white" 
                                 value={quantity}
                                 onChange={(e) =>setQuantity(e.target.value)}
                                 placeholder="Qty"
@@ -94,7 +94,7 @@ const ShoppingListCard = ({item, updateItem, deleteItem}: Props) => {
                         </div>
 
                         <div className="input-group input-group-sm store-input">
-                            <span className="input-group-text bg-white text-orange border-end-0 ps-2 pe-1">
+                            <span className="input-group-text bg-white text-orange border-end-0 px-1">
                                 <MapPin size={14} />
                             </span>
                             <input 
@@ -128,7 +128,7 @@ const ShoppingListCard = ({item, updateItem, deleteItem}: Props) => {
                         <Save size={18} />
                     </button> : <button 
                         onClick={() => setIsEditMode(true)}
-                        className="mutation-button btn btn-light text-success hover-bg-danger-subtle rounded-circle p-1 ms-1 d-flex align-items-center justify-content-center"
+                        className="mutation-button btn btn-light text-success hover-bg-danger-subtle rounded-circle p-1 ms-md-1 d-flex align-items-center justify-content-center"
                     >
                         <Pencil size={18} />
                     </button>
@@ -136,12 +136,12 @@ const ShoppingListCard = ({item, updateItem, deleteItem}: Props) => {
 
                 <button 
                     onClick={() => deleteItem(item.itemId)}
-                    className="mutation-button btn btn-light text-danger hover-bg-danger-subtle rounded-circle p-1 ms-1 d-flex align-items-center justify-content-center"
+                    className="mutation-button btn btn-light text-danger hover-bg-danger-subtle rounded-circle p-1 ms-md-1 d-flex align-items-center justify-content-center"
                 >
                     <Trash2 size={18} />
                 </button>
             </div>
-        </>
+        </div>
     )
 }
 

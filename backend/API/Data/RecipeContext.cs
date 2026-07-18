@@ -14,6 +14,7 @@ namespace API.Data
 
         public DbSet<Recipe> Recipes { get; set; }
         public DbSet<Ingredient> Ingredients { get; set; }
+        public DbSet<IngredientAlias> IngredientAliases { get; set; }
         public DbSet<RecipeIngredient> RecipeIngredients { get; set; }
         public DbSet<ShoppingList> ShoppingLists { get; set; }
         public DbSet<ShoppingItem> ShoppingItems { get; set; }
@@ -36,6 +37,19 @@ namespace API.Data
 
             builder.Entity<RecipeIngredient>()
                 .HasIndex(recipeIngredient => new { recipeIngredient.RecipeId, recipeIngredient.SortOrder });
+
+            builder.Entity<Ingredient>()
+                .HasIndex(ingredient => ingredient.NormalizedCanonicalName);
+
+            builder.Entity<IngredientAlias>()
+                .HasOne(alias => alias.Ingredient)
+                .WithMany(ingredient => ingredient.Aliases)
+                .HasForeignKey(alias => alias.IngredientId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<IngredientAlias>()
+                .HasIndex(alias => alias.NormalizedAlias)
+                .IsUnique();
 
             builder.Entity<MealPlanEntry>()
                 .HasOne(entry => entry.Recipe)
