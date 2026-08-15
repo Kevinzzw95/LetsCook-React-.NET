@@ -7,7 +7,7 @@ import type {
 import { AuthResponse } from '../../types/user';
 
 const baseQuery = fetchBaseQuery({
-    baseUrl: 'http://localhost:5000/api/',
+    baseUrl: 'http://localhost:5001/api/',
     credentials: 'include',
     prepareHeaders: (headers, { getState }) => {
         const token = (getState() as RootState).auth.token;

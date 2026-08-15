@@ -119,7 +119,7 @@ async def classify_intent(state: ChatGraphState) -> ChatGraphState:
     classifications = result.classifications or _fallback_classifications(request, intent)
 
     return {
-        "intent": intent,f
+        "intent": intent,
         "search_sources": _dedupe_sources(classifications),
         "classifications": [classification.model_dump() for classification in classifications],
     }

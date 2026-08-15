@@ -1,3 +1,5 @@
+import json
+
 from fastapi import HTTPException
 from langchain_core.messages import SystemMessage
 from langchain_openai import ChatOpenAI
@@ -32,6 +34,11 @@ def _build_context(state: ChatGraphState) -> str:
     ranked_results = state.get("ranked_results", [])
     if ranked_results:
         context_lines.append(f"Retrieved {len(ranked_results)} candidate result(s) from tools.")
+        context_lines.append(
+            "Use the following retrieved recipe context to answer the user. "
+            "Do not invent recipe facts that conflict with it:\n"
+            + json.dumps(ranked_results[:10], ensure_ascii=False, default=str)
+        )
 
     return "\n".join(context_lines)
 

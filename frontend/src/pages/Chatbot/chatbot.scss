@@ -213,6 +213,36 @@
         overflow-y: auto;
     }
 
+    .chatbot-room-status,
+    .chatbot-room-error {
+        width: min(100%, 520px);
+        align-self: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.65rem;
+        padding: 0.85rem 1rem;
+        border-radius: 1rem;
+        color: rgba(255, 255, 255, 0.8);
+        background: rgba(255, 255, 255, 0.08);
+        text-align: center;
+    }
+
+    .chatbot-room-error {
+        flex-wrap: wrap;
+        color: #fee2e2;
+        background: rgba(220, 38, 38, 0.18);
+
+        button {
+            min-height: 44px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 999px;
+            padding: 0.45rem 0.9rem;
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+        }
+    }
+
     .chatbot-room-message {
         max-width: min(82%, 520px);
         padding: 0.95rem 1rem;
@@ -233,6 +263,18 @@
         align-self: flex-start;
         border-bottom-left-radius: 0.4rem;
         background: rgba(255, 255, 255, 0.08);
+    }
+
+    .chatbot-room-thinking {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        color: rgba(255, 255, 255, 0.78);
+    }
+
+    .chatbot-spinner {
+        flex: 0 0 auto;
+        animation: chatbot-spin 0.9s linear infinite;
     }
 
     .chatbot-room-composer {
@@ -271,6 +313,31 @@
             justify-content: center;
             background: linear-gradient(to right, #fbbf24, #fb923c);
             color: #ffffff;
+
+            &:disabled {
+                cursor: not-allowed;
+                opacity: 0.48;
+            }
+        }
+    }
+
+    @keyframes chatbot-spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .chatbot-spinner {
+            animation: none;
+        }
+
+        .chatbot-prompt-chip {
+            transition: none;
+
+            &:hover {
+                transform: none;
+            }
         }
     }
 

@@ -1,7 +1,14 @@
-import { useEffect, useState } from 'react';
-import { Bot, ChefHat, MessageSquareText, Send, Sparkles, X } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Bot, ChefHat, LoaderCircle, MessageSquareText, Send, Sparkles, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useChatMutation } from '../../redux/api/aiApiSlice';
+import { useSelector } from 'react-redux';
+import type { AiStoredChatMessage } from '../../redux/api/aiApiSlice';
+import {
+    useChatMutation,
+    useCreateConversationMutation,
+    useLazyGetConversationMessagesQuery
+} from '../../redux/api/aiApiSlice';
+import { selectCurrentUser } from '../../redux/auth/authSlice';
 import './chatbot.scss';
 
 const starterPrompts = [
@@ -11,20 +18,38 @@ const starterPrompts = [
 ];
 
 type ChatMessage = {
+    id: string;
     role: 'user' | 'bot';
     text: string;
 };
 
+const greeting: ChatMessage = {
+    id: 'chef-bot-greeting',
+    role: 'bot',
+    text: 'Hi, I am Chef Bot. Ask me for meal ideas, substitutions, or help turning ingredients into dinner.'
+};
+
+const toChatMessage = (message: AiStoredChatMessage): ChatMessage => ({
+    id: message.id,
+    role: message.role === 'assistant' ? 'bot' : 'user',
+    text: message.content
+});
+
 const Chatbot = () => {
+    const currentUser = useSelector(selectCurrentUser);
+    const storageKey = useMemo(() => `letscook:chef-bot:conversation:${currentUser ?? 'user'}`, [currentUser]);
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [chatInput, setChatInput] = useState('');
+    const [conversationId, setConversationId] = useState<string | null>(null);
+    const [historyError, setHistoryError] = useState<string | null>(null);
+    const [historyReload, setHistoryReload] = useState(0);
+    const [isHistoryLoading, setIsHistoryLoading] = useState(false);
     const [chat, { isLoading: isChatLoading }] = useChatMutation();
-    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
-        {
-            role: 'bot',
-            text: 'Hi, I am Chef Bot. Ask me for meal ideas, substitutions, or help turning ingredients into dinner.'
-        }
-    ]);
+    const [createConversation, { isLoading: isConversationCreating }] = useCreateConversationMutation();
+    const [getConversationMessages] = useLazyGetConversationMessagesQuery();
+    const [chatMessages, setChatMessages] = useState<ChatMessage[]>([greeting]);
+    const messagesEndRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
 
     const openChatRoom = () => setIsChatOpen(true);
     const closeChatRoom = () => setIsChatOpen(false);
@@ -32,42 +57,110 @@ const Chatbot = () => {
     useEffect(() => {
         document.body.classList.toggle('modal-open', isChatOpen);
 
+        const closeOnEscape = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') closeChatRoom();
+        };
+        if (isChatOpen) document.addEventListener('keydown', closeOnEscape);
+
         return () => {
             document.body.classList.remove('modal-open');
+            document.removeEventListener('keydown', closeOnEscape);
         };
     }, [isChatOpen]);
+
+    useEffect(() => {
+        if (!isChatOpen) return;
+
+        let cancelled = false;
+
+        const loadHistory = async () => {
+            setHistoryError(null);
+            setIsHistoryLoading(true);
+
+            try {
+                let activeConversationId = sessionStorage.getItem(storageKey);
+
+                if (!activeConversationId) {
+                    const conversation = await createConversation().unwrap();
+                    activeConversationId = conversation.id;
+                    sessionStorage.setItem(storageKey, activeConversationId);
+                }
+
+                try {
+                    const history = await getConversationMessages(activeConversationId, true).unwrap();
+                    if (!cancelled) {
+                        setConversationId(activeConversationId);
+                        setChatMessages(history.messages.length > 0 ? history.messages.map(toChatMessage) : [greeting]);
+                    }
+                } catch (error) {
+                    const status = typeof error === 'object' && error !== null && 'status' in error
+                        ? error.status
+                        : undefined;
+                    if (status !== 404) throw error;
+
+                    sessionStorage.removeItem(storageKey);
+                    const conversation = await createConversation().unwrap();
+                    sessionStorage.setItem(storageKey, conversation.id);
+                    if (!cancelled) {
+                        setConversationId(conversation.id);
+                        setChatMessages([greeting]);
+                    }
+                }
+
+                if (!cancelled) window.setTimeout(() => inputRef.current?.focus(), 0);
+            } catch {
+                if (!cancelled) {
+                    setHistoryError('Your chat history could not be loaded. Check the AI API and try again.');
+                }
+            } finally {
+                if (!cancelled) setIsHistoryLoading(false);
+            }
+        };
+
+        void loadHistory();
+        return () => {
+            cancelled = true;
+        };
+    }, [createConversation, getConversationMessages, historyReload, isChatOpen, storageKey]);
+
+    useEffect(() => {
+        if (!isChatOpen) return;
+        const behavior = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+        messagesEndRef.current?.scrollIntoView({ behavior, block: 'end' });
+    }, [chatMessages, isChatLoading, isChatOpen]);
 
     const sendMessage = async (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
 
         const trimmedMessage = chatInput.trim();
-        if (!trimmedMessage) return;
+        if (!trimmedMessage || !conversationId) return;
 
-        const nextMessages: ChatMessage[] = [
-            ...chatMessages,
-            { role: 'user', text: trimmedMessage }
-        ];
+        const optimisticMessage: ChatMessage = {
+            id: crypto.randomUUID(),
+            role: 'user',
+            text: trimmedMessage
+        };
 
-        setChatMessages(nextMessages);
+        setChatMessages(currentMessages => [...currentMessages, optimisticMessage]);
         setChatInput('');
 
         try {
             const response = await chat({
-                message: trimmedMessage,
-                history: chatMessages.map(message => ({
-                    role: message.role === 'bot' ? 'assistant' : 'user',
-                    content: message.text
-                }))
+                conversationId,
+                message: trimmedMessage
             }).unwrap();
 
             setChatMessages(currentMessages => [
-                ...currentMessages,
-                { role: 'bot', text: response.reply }
+                ...currentMessages.map(message => (
+                    message.id === optimisticMessage.id ? toChatMessage(response.user_message) : message
+                )),
+                toChatMessage(response.assistant_message)
             ]);
         } catch {
             setChatMessages(currentMessages => [
                 ...currentMessages,
                 {
+                    id: crypto.randomUUID(),
                     role: 'bot',
                     text: 'I could not reach Chef Bot right now. Please check the AI API server and OpenAI configuration.'
                 }
@@ -187,14 +280,35 @@ const Chatbot = () => {
                         </div>
 
                         <div className="chatbot-room-messages">
-                            {chatMessages.map((message, index) => (
+                            {isHistoryLoading ? (
+                                <div className="chatbot-room-status" role="status">
+                                    <LoaderCircle className="chatbot-spinner" size={20} />
+                                    Loading your recent conversation…
+                                </div>
+                            ) : null}
+                            {historyError ? (
+                                <div className="chatbot-room-error" role="alert">
+                                    <span>{historyError}</span>
+                                    <button type="button" onClick={() => setHistoryReload(value => value + 1)}>
+                                        Try again
+                                    </button>
+                                </div>
+                            ) : null}
+                            {!isHistoryLoading && !historyError ? chatMessages.map((message) => (
                                 <div
-                                    key={`${message.role}-${index}`}
+                                    key={message.id}
                                     className={`chatbot-room-message chatbot-room-message-${message.role}`}
                                 >
                                     {message.text}
                                 </div>
-                            ))}
+                            )) : null}
+                            {isChatLoading ? (
+                                <div className="chatbot-room-message chatbot-room-message-bot chatbot-room-thinking" role="status">
+                                    <LoaderCircle className="chatbot-spinner" size={18} />
+                                    Chef Bot is thinking…
+                                </div>
+                            ) : null}
+                            <div ref={messagesEndRef} />
                         </div>
 
                         <form className="chatbot-room-composer" onSubmit={sendMessage}>
@@ -203,13 +317,19 @@ const Chatbot = () => {
                             </label>
                             <input
                                 id="chatbot-room-input"
+                                ref={inputRef}
                                 type="text"
                                 value={chatInput}
                                 onChange={(event) => setChatInput(event.target.value)}
                                 placeholder="Ask what to cook next"
+                                disabled={isHistoryLoading || isConversationCreating || Boolean(historyError)}
                             />
-                            <button type="submit" aria-label="Send message" disabled={isChatLoading}>
-                                <Send size={18} />
+                            <button
+                                type="submit"
+                                aria-label="Send message"
+                                disabled={isChatLoading || isHistoryLoading || isConversationCreating || !conversationId}
+                            >
+                                {isChatLoading ? <LoaderCircle className="chatbot-spinner" size={18} /> : <Send size={18} />}
                             </button>
                         </form>
                     </div>
