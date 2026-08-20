@@ -1,5 +1,5 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { RootState } from '../store/store';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { createBaseQueryWithReauth } from './baseQueryWithReauth';
 
 export type AiStoredChatMessage = {
     id: string;
@@ -31,20 +31,9 @@ export type AiConversationMessages = {
     messages: AiStoredChatMessage[];
 };
 
-const baseQuery = fetchBaseQuery({
-    baseUrl: "http://localhost:8088/",
-    prepareHeaders: (headers, { getState }) => {
-        const token = (getState() as RootState).auth.token;
-        if (token) {
-            headers.set('authorization', `Bearer ${token}`);
-        }
-        return headers;
-    }
-})
-
 export const aiApiSlice = createApi({
     reducerPath: 'aiApi',
-    baseQuery: baseQuery,
+    baseQuery: createBaseQueryWithReauth('http://localhost:8088/'),
     endpoints: builder => ({
         createConversation: builder.mutation<AiConversation, void>({
             query: () => ({

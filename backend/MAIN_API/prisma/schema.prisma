@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  Id                     String     @id @db.Text
+  UserName               String?    @db.VarChar(256)
+  NormalizedUserName     String?    @db.VarChar(256)
+  Email                  String?    @db.VarChar(256)
+  NormalizedEmail        String?    @db.VarChar(256)
+  EmailConfirmed         Boolean
+  PasswordHash           String?    @db.Text
+  SecurityStamp          String?    @db.Text
+  ConcurrencyStamp       String?    @db.Text
+  PhoneNumber            String?    @db.Text
+  PhoneNumberConfirmed   Boolean
+  TwoFactorEnabled       Boolean
+  LockoutEnd             DateTime?  @db.Timestamptz(6)
+  LockoutEnabled         Boolean
+  AccessFailedCount      Int
+  RefreshToken           String?    @db.Text
+  RefreshTokenExpiryTime DateTime   @db.Timestamptz(6)
+  userRoles              UserRole[]
+
+  @@map("AspNetUsers")
+}
+
+model Role {
+  Id               String     @id @db.Text
+  Name             String?    @db.VarChar(256)
+  NormalizedName   String?    @db.VarChar(256)
+  ConcurrencyStamp String?    @db.Text
+  userRoles        UserRole[]
+
+  @@map("AspNetRoles")
+}
+
+model UserRole {
+  UserId String @db.Text
+  RoleId String @db.Text
+  user   User   @relation(fields: [UserId], references: [Id], onDelete: Cascade)
+  role   Role   @relation(fields: [RoleId], references: [Id], onDelete: Cascade)
+
+  @@id([UserId, RoleId])
+  @@index([RoleId])
+  @@map("AspNetUserRoles")
+}
+
+model Ingredient {
+  Id                      BigInt             @id @default(autoincrement())
+  Name                    String?            @db.Text
+  Image                   String?            @db.Text
+  CanonicalNameEn         String?            @db.Text
+  NormalizedCanonicalName String?            @db.Text
+  UsdaDescription         String?            @db.Text
+  UsdaFdcId               BigInt?
+  aliases                 IngredientAlias[]
+  recipeIngredients       RecipeIngredient[]
+  shoppingItems           ShoppingItem[]
+
+  @@map("Ingredients")
+}
+
+model IngredientAlias {
+  Id              BigInt     @id @default(autoincrement())
+  IngredientId    BigInt
+  Alias           String?    @db.Text
+  NormalizedAlias String?    @db.Text
+  LanguageCode    String?    @db.Text
+  Source          String?    @db.Text
+  IsVerified      Boolean
+  ingredient      Ingredient @relation(fields: [IngredientId], references: [Id], onDelete: Cascade)
+
+  @@index([IngredientId])
+  @@index([NormalizedAlias])
+  @@map("IngredientAliases")
+}
+
+model Recipe {
+  Id                 BigInt              @id @default(autoincrement())
+  Title              String?             @db.Text
+  ImageInfo          Json                @default("{}") @db.JsonB
+  Servings           Int
+  PreparationMinutes Int
+  CookingMinutes     Int
+  SourceName         String?             @db.Text
+  SourceUrl          String?             @db.Text
+  Cuisine            String?             @db.Text
+  Diets              String[]            @default([])
+  DishType           String?             @db.Text
+  Summary            String?             @db.Text
+  Calories           Decimal             @db.Decimal
+  Protein            Decimal             @db.Decimal
+  Carbohydrate       Decimal             @db.Decimal
+  Fat                Decimal             @db.Decimal
+  CreatedAt          DateTime            @db.Timestamptz(6)
+  UpdatedAt          DateTime            @db.Timestamptz(6)
+  UserId             String?             @db.Text
+  instructions       Instruction[]
+  recipeIngredients  RecipeIngredient[]
+  mealPlanEntries    MealPlanEntry[]
+
+  @@map("Recipes")
+}
+
+model Instruction {
+  Id       BigInt       @id @default(autoincrement())
+  RecipeId BigInt
+  Name     String?      @db.Text
+  recipe   Recipe       @relation(fields: [RecipeId], references: [Id], onDelete: Cascade)
+  steps    RecipeStep[]
+
+  @@index([RecipeId])
+  @@map("Instruction")
+}
+
+model RecipeStep {
+  InstructionId BigInt
+  Id            Int         @default(autoincrement())
+  StepNumber    Int
+  Description   String?     @db.Text
+  instruction   Instruction @relation(fields: [InstructionId], references: [Id], onDelete: Cascade)
+
+  @@id([InstructionId, Id])
+  @@map("Step")
+}
+
+model RecipeIngredient {
+  Id           BigInt     @id @default(autoincrement())
+  RecipeId     BigInt
+  IngredientId BigInt
+  Amount       String?    @db.Text
+  Unit         String?    @db.Text
+  Consistency  String?    @db.Text
+  Original     String?    @db.Text
+  DisplayName  String?    @db.Text
+  DisplayImage String?    @db.Text
+  SortOrder    Int
+  recipe       Recipe     @relation(fields: [RecipeId], references: [Id], onDelete: Cascade)
+  ingredient   Ingredient @relation(fields: [IngredientId], references: [Id], onDelete: Restrict)
+
+  @@index([IngredientId])
+  @@index([RecipeId, SortOrder])
+  @@map("RecipeIngredients")
+}
+
+model ShoppingList {
+  Id           Int            @id @default(autoincrement())
+  UserId       String?        @db.Text
+  ClientSecret String?        @db.Text
+  items        ShoppingItem[]
+
+  @@map("ShoppingLists")
+}
+
+model ShoppingItem {
+  Id             BigInt        @id @default(autoincrement())
+  IngredientId   BigInt?
+  Amount         String?       @db.Text
+  Unit           String?       @db.Text
+  Store          String?       @db.Text
+  IsBought       Boolean
+  ShoppingListId Int
+  ingredient     Ingredient?   @relation(fields: [IngredientId], references: [Id])
+  shoppingList   ShoppingList  @relation(fields: [ShoppingListId], references: [Id], onDelete: Cascade)
+
+  @@index([IngredientId])
+  @@index([ShoppingListId])
+  @@map("ShoppingItems")
+}
+
+model MealPlanEntry {
+  Id          BigInt   @id @default(autoincrement())
+  UserId      String?  @db.Text
+  PlannedDate DateTime @db.Timestamptz(6)
+  MealType    String?  @db.Text
+  RecipeId    BigInt
+  CreatedAt   DateTime @db.Timestamptz(6)
+  UpdatedAt   DateTime @db.Timestamptz(6)
+  recipe      Recipe   @relation(fields: [RecipeId], references: [Id], onDelete: Cascade)
+
+  @@index([RecipeId])
+  @@index([UserId, PlannedDate, MealType])
+  @@map("MealPlanEntries")
+}

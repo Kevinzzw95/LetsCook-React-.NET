@@ -4,7 +4,9 @@ Chef Bot stores conversations in PostgreSQL and caches the latest messages in Re
 
 ## Configuration
 
-Copy the relevant values from `.env.example` into `.env`. `JWT_SECRET` must exactly match the .NET API's `JWTSettings:TokenKey`; this lets FastAPI validate the access tokens issued by the .NET API. Never expose this signing key to the frontend.
+Copy the relevant values from `.env.example` into `.env`. `JWT_SECRET` must exactly match the NestJS main API's `JWT_SECRET`; this lets FastAPI validate the access tokens issued by NestJS. Never expose this signing key to the frontend.
+
+Set the same complete `REDIS_URL` in both `MAIN_API/.env` and `AI_API/.env`. For Redis Cloud, use `redis://default:password@host:port/0`, or `rediss://...` if TLS is required. The hostname and port alone are not a valid authenticated Redis Cloud configuration. Do not commit credentials.
 
 The API creates the `chat_conversations` and `chat_messages` tables on first use. The configured PostgreSQL user therefore needs permission to create tables and indexes.
 

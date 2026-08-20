@@ -12,7 +12,6 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from app.core.config import get_settings
 
 
-USER_ID_CLAIM = "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier"
 _bearer = HTTPBearer(auto_error=False)
 
 
@@ -41,7 +40,10 @@ def decode_user_id(token: str, secret: str) -> str:
     except (json.JSONDecodeError, UnicodeDecodeError) as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid access token") from exc
 
-    if header.get("alg") != "HS512":
+    if not isinstance(header, dict) or not isinstance(payload, dict):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid access token")
+
+    if header.get("alg") != "HS512" or header.get("typ") != "JWT":
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unsupported access token")
 
     signing_input = f"{encoded_header}.{encoded_payload}".encode()
@@ -58,7 +60,7 @@ def decode_user_id(token: str, secret: str) -> str:
     if isinstance(not_before, (int, float)) and not isinstance(not_before, bool) and not_before > time.time():
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Access token is not active")
 
-    user_id = payload.get(USER_ID_CLAIM) or payload.get("nameid") or payload.get("sub")
+    user_id = payload.get("nameid")
     if not isinstance(user_id, str) or not user_id.strip():
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Access token has no user identifier")
 

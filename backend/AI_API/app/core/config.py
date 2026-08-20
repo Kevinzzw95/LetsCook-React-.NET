@@ -29,7 +29,7 @@ class Settings(BaseModel):
     recipe_search_limit: int = 5
     recipe_vector_collection: str = "letscook_recipes"
     jwt_secret: Optional[str] = None
-    redis_url: str = "redis://default:qKJ6PBERMTXaHRZPDcgtFf0XgTbHdmvX@redis-12438.crce219.us-east-1-4.ec2.cloud.redislabs.com:12438/0"
+    redis_url: Optional[str] = None
     chat_history_limit: int = 40
     chat_history_ttl_seconds: int = 604800
     langsmith_tracing: bool = False
@@ -55,7 +55,7 @@ def get_settings() -> Settings:
         recipe_search_limit=int(os.environ.get("RECIPE_SEARCH_LIMIT", "5")),
         recipe_vector_collection=os.environ.get("RECIPE_VECTOR_COLLECTION", "letscook_recipes"),
         jwt_secret=os.environ.get("JWT_SECRET"),
-        redis_url=os.environ.get("REDIS_URL", "redis://default:qKJ6PBERMTXaHRZPDcgtFf0XgTbHdmvX@redis-12438.crce219.us-east-1-4.ec2.cloud.redislabs.com:12438/0"),
+        redis_url=os.environ.get("REDIS_URL"),
         chat_history_limit=int(os.environ.get("CHAT_HISTORY_LIMIT", "40")),
         chat_history_ttl_seconds=int(os.environ.get("CHAT_HISTORY_TTL_SECONDS", "604800")),
         langsmith_tracing=_get_bool_env("LANGSMITH_TRACING"),

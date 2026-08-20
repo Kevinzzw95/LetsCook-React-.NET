@@ -165,10 +165,13 @@ class RecentChatCache:
     def __init__(self) -> None:
         self._client: redis_asyncio.Redis | None = None
 
-    def _get_client(self) -> redis_asyncio.Redis:
+    def _get_client(self) -> redis_asyncio.Redis | None:
         if self._client is None:
+            redis_url = get_settings().redis_url
+            if not redis_url:
+                return None
             self._client = redis_asyncio.from_url(
-                get_settings().redis_url,
+                redis_url,
                 decode_responses=True,
                 socket_connect_timeout=0.5,
                 socket_timeout=0.5,
@@ -181,8 +184,11 @@ class RecentChatCache:
 
     async def get(self, user_id: str, conversation_id: UUID) -> list[ChatMessage] | None:
         settings = get_settings()
+        client = self._get_client()
+        if client is None:
+            return None
         try:
-            values = await self._get_client().lrange(
+            values = await client.lrange(
                 self._key(user_id, conversation_id),
                 -settings.chat_history_limit,
                 -1,
@@ -196,9 +202,12 @@ class RecentChatCache:
 
     async def replace(self, user_id: str, conversation_id: UUID, messages: list[ChatMessage]) -> None:
         settings = get_settings()
+        client = self._get_client()
+        if client is None:
+            return
         key = self._key(user_id, conversation_id)
         try:
-            pipeline = self._get_client().pipeline(transaction=True)
+            pipeline = client.pipeline(transaction=True)
             pipeline.delete(key)
             if messages:
                 pipeline.rpush(key, *(message.model_dump_json() for message in messages))
@@ -210,9 +219,12 @@ class RecentChatCache:
 
     async def append(self, user_id: str, conversation_id: UUID, messages: list[ChatMessage]) -> None:
         settings = get_settings()
+        client = self._get_client()
+        if client is None:
+            return
         key = self._key(user_id, conversation_id)
         try:
-            pipeline = self._get_client().pipeline(transaction=True)
+            pipeline = client.pipeline(transaction=True)
             pipeline.rpush(key, *(message.model_dump_json() for message in messages))
             pipeline.ltrim(key, -settings.chat_history_limit, -1)
             pipeline.expire(key, settings.chat_history_ttl_seconds)
@@ -221,10 +233,18 @@ class RecentChatCache:
             logger.warning("Redis chat history write failed; PostgreSQL remains authoritative: %s", exc)
 
     async def delete(self, user_id: str, conversation_id: UUID) -> None:
+        client = self._get_client()
+        if client is None:
+            return
         try:
-            await self._get_client().delete(self._key(user_id, conversation_id))
+            await client.delete(self._key(user_id, conversation_id))
         except RedisError as exc:
             logger.warning("Redis chat history delete failed: %s", exc)
+
+    async def close(self) -> None:
+        if self._client is not None:
+            await self._client.close()
+            self._client = None
 
 
 repository = ChatHistoryRepository()

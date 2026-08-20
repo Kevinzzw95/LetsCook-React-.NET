@@ -1,6 +1,7 @@
 import asyncio
 import os
 import subprocess
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
@@ -10,15 +11,22 @@ from fastapi.staticfiles import StaticFiles
 from app.api.router import api_router
 from app.core.config import get_settings
 from app.core.observability import configure_langsmith
+from app.services.chat_history import recent_cache
 
 
 WEBUI_DIR = os.path.join(os.path.dirname(__file__), "api", "webui")
 
 
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    yield
+    await recent_cache.close()
+
+
 def create_app() -> FastAPI:
     settings = get_settings()
     configure_langsmith(settings)
-    app = FastAPI(title="LetsCook AI API", version="1.0.0")
+    app = FastAPI(title="LetsCook AI API", version="1.0.0", lifespan=lifespan)
 
     app.add_middleware(
         CORSMiddleware,
