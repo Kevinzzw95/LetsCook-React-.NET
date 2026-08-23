@@ -12,10 +12,6 @@ SOURCE_NODE_MAP = {
 }
 
 
-async def prepare_agent_routes(state: ChatGraphState) -> ChatGraphState:
-    return {}
-
-
 def _classification_query(classification: dict[str, Any]) -> str:
     return str(classification.get("query") or "")
 

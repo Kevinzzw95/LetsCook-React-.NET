@@ -10,6 +10,17 @@ Set the same complete `REDIS_URL` in both `MAIN_API/.env` and `AI_API/.env`. For
 
 The API creates the `chat_conversations` and `chat_messages` tables on first use. The configured PostgreSQL user therefore needs permission to create tables and indexes.
 
+### Web recipe search
+
+Set `WEB_RECIPE_SEARCH_URLS` to one or more comma-separated search URL templates. `{query}` is replaced with URL-encoded search terms and `{intent}` is also available. For example:
+
+```dotenv
+WEB_RECIPE_SEARCH_URLS=https://www.bbcgoodfood.com/search?q={query}
+WEB_RECIPE_SEARCH_MAX_RESULTS=3
+```
+
+Chef Bot retrieves the configured pages over HTTP, extracts schema.org recipe JSON-LD, and follows only same-domain links. Use only targets whose terms permit automated access; blocked targets are skipped.
+
 ## API flow
 
 - `POST /conversations` creates a conversation for the authenticated user.

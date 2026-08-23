@@ -31,7 +31,37 @@ class ConversationMessagesResponse(BaseModel):
     messages: list[StoredChatMessage]
 
 
+class RecipePreviewIngredient(BaseModel):
+    id: str | None = None
+    name: str
+    amount: str = ""
+    unit: str = ""
+    image: str | None = None
+
+
+class RecipePreviewStep(BaseModel):
+    id: str | None = None
+    stepNumber: int
+    description: str
+
+
+class RecipePreviewDraft(BaseModel):
+    title: str
+    servings: int
+    preparationMinutes: int = 0
+    type: str = ""
+    cuisine: str = ""
+    diet: str = ""
+    ingredients: list[RecipePreviewIngredient] = Field(default_factory=list)
+    ingredientsEn: list[RecipePreviewIngredient] = Field(default_factory=list)
+    steps: list[RecipePreviewStep] = Field(default_factory=list)
+    images: list[str] = Field(default_factory=list)
+    sourceName: str = ""
+    sourceUrl: str | None = None
+
+
 class ChatResponse(BaseModel):
     reply: str
     user_message: StoredChatMessage
     assistant_message: StoredChatMessage
+    recipe_preview: RecipePreviewDraft | None = None

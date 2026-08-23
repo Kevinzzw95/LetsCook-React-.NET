@@ -19,6 +19,11 @@ def _get_bool_env(name: str, default: bool = False) -> bool:
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _get_list_env(name: str) -> list[str]:
+    value = os.environ.get(name, "")
+    return [item.strip() for item in value.replace("\n", ",").split(",") if item.strip()]
+
+
 class Settings(BaseModel):
     api_key_gemini: Optional[str] = None
     openai_api_key: Optional[str] = None
@@ -28,6 +33,8 @@ class Settings(BaseModel):
     recipe_database_url: Optional[str] = None
     recipe_search_limit: int = 5
     recipe_vector_collection: str = "letscook_recipes"
+    web_recipe_search_urls: list[str] = Field(default_factory=list)
+    web_recipe_search_max_results: int = 3
     jwt_secret: Optional[str] = None
     redis_url: Optional[str] = None
     chat_history_limit: int = 40
@@ -54,6 +61,8 @@ def get_settings() -> Settings:
         recipe_database_url=os.environ.get("RECIPE_DATABASE_URL") or os.environ.get("DATABASE_URL"),
         recipe_search_limit=int(os.environ.get("RECIPE_SEARCH_LIMIT", "5")),
         recipe_vector_collection=os.environ.get("RECIPE_VECTOR_COLLECTION", "letscook_recipes"),
+        web_recipe_search_urls=_get_list_env("WEB_RECIPE_SEARCH_URLS"),
+        web_recipe_search_max_results=max(1, min(int(os.environ.get("WEB_RECIPE_SEARCH_MAX_RESULTS", "3")), 10)),
         jwt_secret=os.environ.get("JWT_SECRET"),
         redis_url=os.environ.get("REDIS_URL"),
         chat_history_limit=int(os.environ.get("CHAT_HISTORY_LIMIT", "40")),

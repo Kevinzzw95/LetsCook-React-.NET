@@ -1,5 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { createBaseQueryWithReauth } from './baseQueryWithReauth';
+import type { RecipeDraft } from '../../types/recipe';
 
 export type AiStoredChatMessage = {
     id: string;
@@ -13,10 +14,15 @@ export type AiChatRequest = {
     message: string;
 };
 
+export type AiRecipePreview = RecipeDraft & {
+    sourceUrl?: string;
+};
+
 export type AiChatResponse = {
     reply: string;
     user_message: AiStoredChatMessage;
     assistant_message: AiStoredChatMessage;
+    recipe_preview: AiRecipePreview | null;
 };
 
 export type AiConversation = {
