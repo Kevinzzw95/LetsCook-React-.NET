@@ -14,7 +14,8 @@ ChatIntent = Literal[
     "general",
 ]
 
-SearchSource = Literal["internal", "web", "social"]
+SearchSource = Literal["internal", "web", "nutrition"]
+SearchStrategy = Literal["parallel", "web_from_internal"]
 
 
 SYSTEM_MESSAGE = (
@@ -26,6 +27,8 @@ SYSTEM_MESSAGE = (
 
 class ChatGraphState(TypedDict, total=False):
     messages: Annotated[list[Any], add_messages]
+    user_id: str | None
+    meal_plan: dict[str, Any]
     request: str
     recipe_attributes: dict[str, Any]
     cuisine: str | None
@@ -36,15 +39,19 @@ class ChatGraphState(TypedDict, total=False):
     health_goals: list[str]
     dietary_constraints: list[str]
     intent: ChatIntent
+    search_strategy: SearchStrategy
     search_sources: list[SearchSource]
-    classifications: list[dict[str, Any]]
+    agent_queries: dict[str, str]
     agent_source: SearchSource
     agent_query: str
     internal_results: list[dict[str, Any]]
-    web_results: list[dict[str, Any]]
-    social_results: list[dict[str, Any]]
+    similarity_profile: dict[str, Any]
+    web_query: str
+    web_results: list[str]
     nutrition_notes: list[str]
-    health_notes: list[str]
+    normalized_results: list[dict[str, Any]]
+    validated_results: list[dict[str, Any]]
+    validation_notes: list[str]
     ranked_results: list[dict[str, Any]]
 
 

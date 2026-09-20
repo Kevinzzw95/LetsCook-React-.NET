@@ -33,8 +33,9 @@ class Settings(BaseModel):
     recipe_database_url: Optional[str] = None
     recipe_search_limit: int = 5
     recipe_vector_collection: str = "letscook_recipes"
-    web_recipe_search_urls: list[str] = Field(default_factory=list)
+    web_recipe_preferred_domains: list[str] = Field(default_factory=list)
     web_recipe_search_max_results: int = 3
+    tavily_api_key: Optional[str] = None
     jwt_secret: Optional[str] = None
     redis_url: Optional[str] = None
     chat_history_limit: int = 40
@@ -61,8 +62,9 @@ def get_settings() -> Settings:
         recipe_database_url=os.environ.get("RECIPE_DATABASE_URL") or os.environ.get("DATABASE_URL"),
         recipe_search_limit=int(os.environ.get("RECIPE_SEARCH_LIMIT", "5")),
         recipe_vector_collection=os.environ.get("RECIPE_VECTOR_COLLECTION", "letscook_recipes"),
-        web_recipe_search_urls=_get_list_env("WEB_RECIPE_SEARCH_URLS"),
+        web_recipe_preferred_domains=_get_list_env("WEB_RECIPE_PREFERRED_DOMAINS"),
         web_recipe_search_max_results=max(1, min(int(os.environ.get("WEB_RECIPE_SEARCH_MAX_RESULTS", "3")), 10)),
+        tavily_api_key=os.environ.get("TAVILY_API_KEY"),
         jwt_secret=os.environ.get("JWT_SECRET"),
         redis_url=os.environ.get("REDIS_URL"),
         chat_history_limit=int(os.environ.get("CHAT_HISTORY_LIMIT", "40")),

@@ -12,14 +12,44 @@ The API creates the `chat_conversations` and `chat_messages` tables on first use
 
 ### Web recipe search
 
-Set `WEB_RECIPE_SEARCH_URLS` to one or more comma-separated search URL templates. `{query}` is replaced with URL-encoded search terms and `{intent}` is also available. For example:
+Set `OPENAI_API_KEY`, `TAVILY_API_KEY`, and a comma-separated `WEB_RECIPE_PREFERRED_DOMAINS` list. The supervisor can dispatch the Web Search Agent, which invokes the decorated `search_web` tool. For long requests, the tool uses the configured OpenAI model to create two or three focused queries, searches them concurrently with Tavily, deduplicates the candidates, and reranks them using cross-query matches and reciprocal rank. It returns only candidate URLs without crawling or extracting the candidate pages. Short requests use one Tavily search, and planner failures safely fall back to the original query.
 
 ```dotenv
-WEB_RECIPE_SEARCH_URLS=https://www.bbcgoodfood.com/search?q={query}
+TAVILY_API_KEY=tvly-your-api-key
+WEB_RECIPE_PREFERRED_DOMAINS=rednote.com,hanwuji.xiachufang.com,allrecipes.com,foodnetwork.com,seriouseats.com
 WEB_RECIPE_SEARCH_MAX_RESULTS=3
 ```
 
-Chef Bot retrieves the configured pages over HTTP, extracts schema.org recipe JSON-LD, and follows only same-domain links. Use only targets whose terms permit automated access; blocked targets are skipped.
+If no preferred domains are configured, Tavily searches the general web. Missing Tavily credentials or provider failures produce no public-web results rather than falling back to Google scraping. Use only targets whose terms permit automated access.
+
+### Chat graph
+
+Chef Bot uses this fixed orchestration pipeline:
+
+1. The Supervisor Agent extracts request constraints and selects the Internal Search, Web Search, and/or Nutrition specialists.
+2. Selected specialists run in parallel and invoke `search_internal`, `search_web`, or `nutrition_tool` exactly once.
+3. `merge_normalize` combines and deduplicates candidate recipes and web URLs.
+4. `nutrition_validation` removes candidates that conflict with known numeric limits and labels unverifiable web candidates.
+5. `rank_recipes` orders the validated candidates before the Answer Agent produces the final response.
+
+The supervisor also supports a dependency-aware `web_from_internal` strategy for requests such as
+“Based on my saved recipes, find similar recipes on the web.” This route runs sequentially:
+
+```text
+internal_search_agent
+  -> build_similarity_query
+  -> web_search_agent
+  -> nutrition_agent (when selected)
+  -> merge_normalize
+```
+
+The similarity-query stage uses only bounded recipe characteristics from the top internal matches
+(titles, cuisine, dish type, diets, and ingredient names). Database identifiers and source URLs are
+not added to the public search query. If no internal matches are found or profile generation fails,
+the Web Search Agent falls back to the supervisor's original web query.
+
+Authenticated chat requests pass the user's ID into internal retrieval as a metadata filter. The ID
+is used only to scope the vector search and is removed before recipe results are sent to later LLM stages.
 
 ## API flow
 

@@ -43,6 +43,7 @@ SELECT
     r."Fat" AS fat,
     r."SourceName" AS source_name,
     r."SourceUrl" AS source_url,
+    r."UserId" AS user_id,
     r."UpdatedAt" AS updated_at,
     COALESCE(
         (
@@ -237,6 +238,26 @@ async def _load_recipe_documents(connection: asyncpg.Connection) -> list[Documen
     return [_row_to_document(row) for row in rows]
 
 
+async def load_user_recipe_documents(user_id: str) -> list[Document]:
+    """Read current owned recipes without a global index or similarity-search limit."""
+    if not user_id or not user_id.strip():
+        raise ValueError("An authenticated user is required")
+    settings = get_settings()
+    if not settings.recipe_database_url:
+        raise RuntimeError("RECIPE_DATABASE_URL is not configured")
+    connection = await asyncpg.connect(
+        _asyncpg_connection_string(settings.recipe_database_url), timeout=10,
+    )
+    try:
+        query = _RECIPE_DOCUMENTS_SQL.replace(
+            'ORDER BY r."Id"', 'WHERE r."UserId" = $1 ORDER BY r."Id"',
+        )
+        rows = await connection.fetch(query, user_id)
+        return [_row_to_document(row) for row in rows]
+    finally:
+        await connection.close()
+
+
 async def _read_index_hashes(connection: asyncpg.Connection, collection_name: str) -> dict[str, str]:
     await connection.execute(_CREATE_SYNC_STATE_SQL)
     value = await connection.fetchval(
@@ -298,6 +319,8 @@ async def sync_recipe_embeddings(vector_store: PGVector) -> None:
 
 def _metadata_filter(attributes: dict[str, Any]) -> dict[str, Any] | None:
     filters: list[dict[str, Any]] = []
+    if attributes.get("user_id"):
+        filters.append({"user_id": {"$eq": str(attributes["user_id"])}})
     if attributes.get("cuisine"):
         filters.append({"cuisine_normalized": {"$eq": str(attributes["cuisine"]).lower()}})
     if attributes.get("calories") is not None:
@@ -351,4 +374,10 @@ async def retrieve_recipe_documents(
 
 
 def recipe_documents_to_results(documents: list[Document]) -> list[dict[str, Any]]:
-    return [{**document.metadata, "content": document.page_content} for document in documents]
+    return [
+        {
+            **{key: value for key, value in document.metadata.items() if key != "user_id"},
+            "content": document.page_content,
+        }
+        for document in documents
+    ]

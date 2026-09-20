@@ -1,15 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { BookOpen, Bot, ChefHat, LoaderCircle, MessageSquareText, Send, Sparkles, X } from 'lucide-react';
+import { Bot, ChefHat, LoaderCircle, MessageSquareText, Send, Sparkles, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import type { AiRecipePreview, AiStoredChatMessage } from '../../redux/api/aiApiSlice';
+import type { AiStoredChatMessage } from '../../redux/api/aiApiSlice';
 import {
     useChatMutation,
     useCreateConversationMutation,
     useLazyGetConversationMessagesQuery
 } from '../../redux/api/aiApiSlice';
 import { selectCurrentUser } from '../../redux/auth/authSlice';
-import RecipePreview from '../../components/RecipeEditor/Preview';
 import './chatbot.scss';
 
 const starterPrompts = [
@@ -22,7 +21,6 @@ type ChatMessage = {
     id: string;
     role: 'user' | 'bot';
     text: string;
-    recipePreview?: AiRecipePreview;
 };
 
 const greeting: ChatMessage = {
@@ -31,11 +29,10 @@ const greeting: ChatMessage = {
     text: 'Hi, I am Chef Bot. Ask me for meal ideas, substitutions, or help turning ingredients into dinner.'
 };
 
-const toChatMessage = (message: AiStoredChatMessage, recipePreview?: AiRecipePreview | null): ChatMessage => ({
+const toChatMessage = (message: AiStoredChatMessage): ChatMessage => ({
     id: message.id,
     role: message.role === 'assistant' ? 'bot' : 'user',
-    text: message.content,
-    ...(recipePreview ? { recipePreview } : {})
+    text: message.content
 });
 
 const Chatbot = () => {
@@ -51,41 +48,17 @@ const Chatbot = () => {
     const [createConversation, { isLoading: isConversationCreating }] = useCreateConversationMutation();
     const [getConversationMessages] = useLazyGetConversationMessagesQuery();
     const [chatMessages, setChatMessages] = useState<ChatMessage[]>([greeting]);
-    const [recipePreview, setRecipePreview] = useState<AiRecipePreview | null>(null);
-    const [isRecipePreviewOpen, setIsRecipePreviewOpen] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const previewCloseRef = useRef<HTMLButtonElement>(null);
 
     const openChatRoom = () => setIsChatOpen(true);
-    const closeChatRoom = () => {
-        setIsRecipePreviewOpen(false);
-        setRecipePreview(null);
-        setIsChatOpen(false);
-    };
-    const closeRecipePreview = () => {
-        setIsRecipePreviewOpen(false);
-        window.setTimeout(() => inputRef.current?.focus(), 0);
-    };
-    const openRecipePreview = (preview: AiRecipePreview) => {
-        setRecipePreview(preview);
-        setIsRecipePreviewOpen(true);
-    };
-
-    useEffect(() => {
-        if (isRecipePreviewOpen) previewCloseRef.current?.focus();
-    }, [isRecipePreviewOpen]);
+    const closeChatRoom = () => setIsChatOpen(false);
 
     useEffect(() => {
         document.body.classList.toggle('modal-open', isChatOpen);
 
         const closeOnEscape = (event: KeyboardEvent) => {
-            if (event.key !== 'Escape') return;
-            if (isRecipePreviewOpen) {
-                closeRecipePreview();
-            } else {
-                closeChatRoom();
-            }
+            if (event.key === 'Escape') closeChatRoom();
         };
         if (isChatOpen) document.addEventListener('keydown', closeOnEscape);
 
@@ -93,7 +66,7 @@ const Chatbot = () => {
             document.body.classList.remove('modal-open');
             document.removeEventListener('keydown', closeOnEscape);
         };
-    }, [isChatOpen, isRecipePreviewOpen]);
+    }, [isChatOpen]);
 
     useEffect(() => {
         if (!isChatOpen) return;
@@ -185,7 +158,7 @@ const Chatbot = () => {
                 ...currentMessages.map(message => (
                     message.id === optimisticMessage.id ? toChatMessage(response.user_message) : message
                 )),
-                toChatMessage(response.assistant_message, response.recipe_preview)
+                toChatMessage(response.assistant_message)
             ]);
         } catch {
             setChatMessages(currentMessages => [
@@ -331,19 +304,6 @@ const Chatbot = () => {
                                     className={`chatbot-room-message chatbot-room-message-${message.role}`}
                                 >
                                     <div>{message.text}</div>
-                                    {message.role === 'bot' && message.recipePreview ? (
-                                        <button
-                                            type="button"
-                                            className="chatbot-recipe-preview-trigger"
-                                            onClick={() => {
-                                                if (message.recipePreview) openRecipePreview(message.recipePreview);
-                                            }}
-                                            aria-label={`Show recipe preview for ${message.recipePreview.title}`}
-                                        >
-                                            <BookOpen size={18} />
-                                            Show recipe preview
-                                        </button>
-                                    ) : null}
                                 </div>
                             )) : null}
                             {isChatLoading ? (
@@ -380,50 +340,6 @@ const Chatbot = () => {
                 </div>
             )}
 
-            {isChatOpen && isRecipePreviewOpen && recipePreview ? (
-                <div
-                    className="chatbot-recipe-preview-modal"
-                    role="dialog"
-                    aria-modal="true"
-                    aria-labelledby="chatbot-recipe-preview-title"
-                >
-                    <button
-                        type="button"
-                        className="chatbot-recipe-preview-backdrop"
-                        onClick={closeRecipePreview}
-                        aria-label="Close recipe preview"
-                    />
-                    <section className="chatbot-recipe-preview-panel">
-                        <header className="chatbot-recipe-preview-header">
-                            <div>
-                                <span>Recipe preview</span>
-                                <h2 id="chatbot-recipe-preview-title">{recipePreview.title}</h2>
-                            </div>
-                            <button
-                                type="button"
-                                ref={previewCloseRef}
-                                onClick={closeRecipePreview}
-                                aria-label="Close recipe preview"
-                            >
-                                <X size={20} />
-                            </button>
-                        </header>
-                        <div className="chatbot-recipe-preview-content">
-                            <RecipePreview {...recipePreview} />
-                        </div>
-                        <footer className="chatbot-recipe-preview-footer">
-                            {recipePreview.sourceUrl ? (
-                                <a href={recipePreview.sourceUrl} target="_blank" rel="noreferrer">
-                                    Open original source
-                                </a>
-                            ) : null}
-                            <button type="button" onClick={closeRecipePreview}>
-                                Close preview
-                            </button>
-                        </footer>
-                    </section>
-                </div>
-            ) : null}
         </div>
     );
 };

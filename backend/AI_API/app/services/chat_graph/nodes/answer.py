@@ -3,27 +3,28 @@ import json
 from fastapi import HTTPException
 from langchain_core.messages import SystemMessage
 from langchain_openai import ChatOpenAI
-from langchain_core.tools import BaseTool
 
 from app.core.config import get_settings
 from app.services.chat_graph.state import ChatGraphState, ensure_system_message
-from app.services.chat_graph.tools.chat_tools import CHAT_TOOLS
 
 
-TOOL_USAGE_PROMPT = """Tool rules:
-- Use search tools only when their data is needed to answer accurately.
-- A qualified web recipe has a title, source URL, at least one ingredient, and at least one instruction step.
-- If the final answer recommends a qualified recipe returned by search_public_recipes/search_web, call
-  create_recipe_preview with that returned recipe's actual fields.
-- For social results, only call create_recipe_preview when the result contains enough recipe detail for a useful preview.
-- Never call create_recipe_preview for internal recipes or invented recipes.
-- After create_recipe_preview succeeds, ask whether the user would like to see it and tell them to use the
-  "Show recipe preview" button. Do not print the preview JSON.
+ANSWER_PROMPT = """Answer rules:
+- The supervisor and specialist agents have already completed tool use. Do not request more tools.
+- Web search results contain candidate URLs only. Present relevant URLs without claiming recipe details that were not retrieved.
+- Do not offer or create recipe previews.
+- Respect all nutrition validation and safety notes.
+- For meal plans, use only the meal_plan tool output. Show each day, meal, saved recipe ID, servings, and daily totals.
+- Never invent or substitute recipes, alter calculated totals, or claim unmet targets were satisfied.
+- If the plan is empty, explain its status and ask for the missing requirements or saved recipes.
+- A plan is a suggestion, not a saved calendar entry. Surface tool notes relevant to the requirements.
 """
 
 
 def _build_context(state: ChatGraphState) -> str:
     context_lines: list[str] = []
+
+    if "meal_plan" in state:
+        return "Meal planning tool output:\n" + json.dumps(state["meal_plan"], ensure_ascii=False, default=str)
 
     intent = state.get("intent")
     if intent:
@@ -33,17 +34,21 @@ def _build_context(state: ChatGraphState) -> str:
     if search_sources:
         context_lines.append(f"Selected search sources: {', '.join(search_sources)}.")
 
+    if state.get("search_strategy") == "web_from_internal":
+        context_lines.append(
+            "The internal recipes are similarity seeds; the web URLs were discovered from their recipe characteristics."
+        )
+        similarity_profile = state.get("similarity_profile", {})
+        if similarity_profile:
+            context_lines.append(f"Similarity profile: {similarity_profile}.")
+
     recipe_attributes = state.get("recipe_attributes", {})
     if recipe_attributes:
         context_lines.append(f"Extracted recipe attributes: {recipe_attributes}.")
 
-    nutrition_notes = state.get("nutrition_notes", [])
-    if nutrition_notes:
-        context_lines.append("Nutrition notes: " + " ".join(nutrition_notes))
-
-    health_notes = state.get("health_notes", [])
-    if health_notes:
-        context_lines.append("Health notes: " + " ".join(health_notes))
+    validation_notes = state.get("validation_notes", [])
+    if validation_notes:
+        context_lines.append("Nutrition validation notes: " + " ".join(validation_notes))
 
     ranked_results = state.get("ranked_results", [])
     if ranked_results:
@@ -57,18 +62,18 @@ def _build_context(state: ChatGraphState) -> str:
     return "\n".join(context_lines)
 
 
-async def answer(state: ChatGraphState, tools: list[BaseTool] | None = None) -> ChatGraphState:
+async def answer(state: ChatGraphState) -> ChatGraphState:
     settings = get_settings()
-    llm = ChatOpenAI(model=settings.openai_model, api_key=settings.openai_api_key).bind_tools(tools or CHAT_TOOLS)
+    llm = ChatOpenAI(model=settings.openai_model, api_key=settings.openai_api_key)
     messages = ensure_system_message(state.get("messages", []))
     context = _build_context(state)
 
     if context:
         messages = [*messages, SystemMessage(content=context)]
-    messages = [*messages, SystemMessage(content=TOOL_USAGE_PROMPT)]
+    messages = [*messages, SystemMessage(content=ANSWER_PROMPT)]
 
     response = await llm.ainvoke(messages)
-    if not response.content and not response.tool_calls:
+    if not response.content:
         raise HTTPException(status_code=502, detail="OpenAI returned an empty response")
 
     return {

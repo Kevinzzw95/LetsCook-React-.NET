@@ -86,7 +86,7 @@ async def chat(
         raise _database_error(exc) from exc
     await recent_cache.append(user.id, conversation_id, [ChatMessage(role="user", content=message)])
 
-    graph_result = await run_chat_graph(message, history)
+    graph_result = await run_chat_graph(message, history, user_id=user.id)
     reply = graph_result.reply
 
     try:
@@ -99,7 +99,6 @@ async def chat(
         reply=reply,
         user_message=user_message,
         assistant_message=assistant_message,
-        recipe_preview=graph_result.recipe_preview,
     )
 
 

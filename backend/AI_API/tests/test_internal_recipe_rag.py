@@ -5,7 +5,7 @@ from types import SimpleNamespace
 import pytest
 from langchain_core.documents import Document
 
-from app.services.chat_graph.nodes import search_internal as search_internal_module
+from app.services.chat_graph.nodes import specialists as specialists_module
 from app.services.chat_graph.nodes.answer import _build_context
 from app.services.chat_graph.tools import recipe_db
 
@@ -187,7 +187,13 @@ async def test_semantic_retrieval_uses_vector_scores_and_filters(monkeypatch):
 
     documents = await recipe_db.retrieve_recipe_documents(
         "healthy chicken and leafy greens",
-        {"cuisine": "Italian", "calories": 500, "protein": 30, "allergies": ["dairy"]},
+        {
+            "user_id": "user-123",
+            "cuisine": "Italian",
+            "calories": 500,
+            "protein": 30,
+            "allergies": ["dairy"],
+        },
     )
 
     assert documents == [matching]
@@ -197,6 +203,7 @@ async def test_semantic_retrieval_uses_vector_scores_and_filters(monkeypatch):
         25,
         {
             "$and": [
+                {"user_id": {"$eq": "user-123"}},
                 {"cuisine_normalized": {"$eq": "italian"}},
                 {"calories": {"$lte": 500}},
                 {"protein": {"$gte": 30}},
@@ -206,15 +213,17 @@ async def test_semantic_retrieval_uses_vector_scores_and_filters(monkeypatch):
 
 
 @pytest.mark.asyncio
-async def test_search_internal_passes_request_and_attributes_to_vector_retrieval(monkeypatch):
+async def test_internal_search_agent_invokes_tool_with_supervisor_query_and_attributes(monkeypatch):
     calls = []
 
-    async def fake_retrieve(query, attributes):
-        calls.append((query, attributes))
-        return [Document(page_content="Retrieved recipe", metadata={"id": 1, "title": "Result"})]
+    class FakeInternalTool:
+        async def ainvoke(self, arguments):
+            calls.append(arguments)
+            return json.dumps([{"id": 1, "title": "Result", "content": "Retrieved recipe"}])
 
-    monkeypatch.setattr(search_internal_module, "retrieve_recipe_documents", fake_retrieve)
+    monkeypatch.setattr(specialists_module, "search_internal", FakeInternalTool())
     state = {
+        "user_id": "user-123",
         "request": "chicken dinner",
         "agent_query": "router-expanded query",
         "intent": "recipe_search",
@@ -222,9 +231,17 @@ async def test_search_internal_passes_request_and_attributes_to_vector_retrieval
         "recipe_attributes": {"calories": 600},
     }
 
-    result = await search_internal_module.search_internal(state)
+    result = await specialists_module.internal_search_agent(state)
 
-    assert calls == [("chicken dinner", {"calories": 600})]
+    assert calls == [{
+        "query": "router-expanded query",
+        "user_id": "user-123",
+        "cuisine": None,
+        "diet": None,
+        "maximum_calories": 600,
+        "minimum_protein": None,
+        "allergies": [],
+    }]
     assert result["internal_results"][0]["title"] == "Result"
     assert result["internal_results"][0]["content"] == "Retrieved recipe"
 

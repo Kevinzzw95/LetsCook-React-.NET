@@ -1,12 +1,15 @@
+import asyncio
 import json
 import logging
-import re
-from html import unescape
-from typing import Any, Iterator
-from urllib.parse import quote_plus, urljoin, urlparse
+from dataclasses import dataclass
+from typing import Any
+from urllib.parse import urlparse
 
-import httpx
-from bs4 import BeautifulSoup
+from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.tools import tool
+from langchain_openai import ChatOpenAI
+from pydantic import BaseModel, Field
+from tavily import AsyncTavilyClient
 
 from app.core.config import get_settings
 from app.services.chat_graph.state import ChatIntent
@@ -15,186 +18,195 @@ from app.services.chat_graph.state import ChatIntent
 logger = logging.getLogger(__name__)
 
 
-def _nodes(value: Any) -> Iterator[dict[str, Any]]:
-    if isinstance(value, dict):
-        recipe_type = value.get("@type")
-        types = recipe_type if isinstance(recipe_type, list) else [recipe_type]
-        if "Recipe" in types:
-            yield value
-        for child in value.values():
-            yield from _nodes(child)
-    elif isinstance(value, list):
-        for child in value:
-            yield from _nodes(child)
+class WebSearchQueryPlan(BaseModel):
+    queries: list[str] = Field(min_length=2, max_length=3)
 
 
-def _minutes(value: Any) -> int:
-    if not isinstance(value, str):
-        return 0
-    match = re.fullmatch(r"P(?:(?P<days>\d+)D)?T?(?:(?P<hours>\d+)H)?(?:(?P<minutes>\d+)M)?", value)
-    if not match:
-        return 0
-    return int(match.group("days") or 0) * 1440 + int(match.group("hours") or 0) * 60 + int(match.group("minutes") or 0)
+@dataclass
+class RankedCandidate:
+    url: str
+    hits: int = 0
+    reciprocal_rank: float = 0.0
+    tavily_score: float = 0.0
+    first_seen: int = 0
 
 
-def _images(value: Any) -> list[str]:
-    values = value if isinstance(value, list) else [value]
-    images: list[str] = []
-    for item in values:
-        url = item.get("url") if isinstance(item, dict) else item
-        if isinstance(url, str) and url.startswith(("http://", "https://")):
-            images.append(url)
-    return list(dict.fromkeys(images))
+QUERY_PLANNER_PROMPT = """You plan web searches for recipes.
+Break the user's request into 2 or 3 complementary, focused, standalone search queries.
+Preserve explicit ingredients, cuisine, dietary restrictions, cooking method, and time constraints.
+Do not add site: filters or domain names because the search provider applies domain filters separately.
+Do not invent requirements. Return only the structured query plan."""
 
 
-def _instructions(value: Any) -> list[dict[str, Any]]:
-    steps: list[dict[str, Any]] = []
-    values = value if isinstance(value, list) else [value]
-    for item in values:
-        if isinstance(item, str):
-            description = item
-        elif isinstance(item, dict) and isinstance(item.get("itemListElement"), list):
-            steps.extend(_instructions(item["itemListElement"]))
-            continue
-        elif isinstance(item, dict):
-            description = item.get("text") or item.get("name") or ""
-        else:
-            description = ""
-        if str(description).strip():
-            steps.append({"stepNumber": len(steps) + 1, "description": str(description).strip()})
-    return steps
-
-
-def _servings(value: Any) -> int:
-    if isinstance(value, list):
-        value = value[0] if value else ""
-    match = re.search(r"\d+", str(value or ""))
-    return max(1, int(match.group())) if match else 1
-
-
-def _plain_text(value: Any) -> str:
-    return re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", unescape(str(value or "")))).strip()
-
-
-def _recipe_result(recipe: dict[str, Any], source_url: str) -> dict[str, Any] | None:
-    title = _plain_text(recipe.get("name") or recipe.get("headline"))
-    if not title:
+def _normalized_domain(value: str) -> str | None:
+    candidate = value.strip()
+    if not candidate:
         return None
-    prep_minutes = _minutes(recipe.get("prepTime"))
-    cook_minutes = _minutes(recipe.get("cookTime"))
-    total_minutes = _minutes(recipe.get("totalTime"))
-    ingredients = [
-        {"name": _plain_text(item), "amount": "", "unit": ""}
-        for item in recipe.get("recipeIngredient", [])
-        if _plain_text(item)
+    parsed = urlparse(candidate if "://" in candidate else f"//{candidate}")
+    hostname = (parsed.hostname or "").lower().removeprefix("www.")
+    if not hostname or hostname == "google.com" or hostname.endswith(".google.com"):
+        return None
+    return hostname
+
+
+def _preferred_domains(settings: Any) -> list[str]:
+    configured = getattr(settings, "web_recipe_preferred_domains", []) or []
+    domains = [
+        domain
+        for value in configured
+        if (domain := _normalized_domain(value))
     ]
-    return {
-        "source": "web",
-        "title": title,
-        "summary": _plain_text(recipe.get("description")),
-        "source_url": source_url,
-        "images": _images(recipe.get("image")),
-        "servings": _servings(recipe.get("recipeYield")),
-        "preparation_minutes": prep_minutes or max(0, total_minutes - cook_minutes),
-        "cooking_minutes": cook_minutes,
-        "cuisine": _plain_text(recipe.get("recipeCuisine")),
-        "type": _plain_text(recipe.get("recipeCategory")),
-        "diet": _plain_text(recipe.get("suitableForDiet")),
-        "ingredients": ingredients,
-        "steps": _instructions(recipe.get("recipeInstructions", [])),
-    }
+    return list(dict.fromkeys(domains))
 
 
-def _extract_recipes(html: str, source_url: str) -> list[dict[str, Any]]:
-    soup = BeautifulSoup(html, "html.parser")
-    results: list[dict[str, Any]] = []
-    for element in soup.select("script[type='application/ld+json']"):
-        raw_json = element.string or element.get_text()
-        if not raw_json.strip():
+def _matches_preferred_domain(url: str, domains: list[str]) -> bool:
+    if not domains:
+        return True
+    hostname = (urlparse(url).hostname or "").lower().removeprefix("www.")
+    return any(hostname == domain or hostname.endswith(f".{domain}") for domain in domains)
+
+
+def _tavily_results(payload: Any, domains: list[str]) -> list[tuple[str, float]]:
+    if not isinstance(payload, dict) or not isinstance(payload.get("results"), list):
+        return []
+
+    results: list[tuple[str, float]] = []
+    seen: set[str] = set()
+    for item in payload["results"]:
+        url = item.get("url") if isinstance(item, dict) else None
+        if not isinstance(url, str):
             continue
-        try:
-            payload = json.loads(raw_json)
-        except json.JSONDecodeError:
+        parsed = urlparse(url)
+        if parsed.scheme not in {"http", "https"} or not parsed.hostname:
             continue
-        for recipe in _nodes(payload):
-            normalized = _recipe_result(recipe, source_url)
-            if normalized:
-                results.append(normalized)
+        candidate = url.split("#", 1)[0]
+        if not _matches_preferred_domain(candidate, domains) or candidate in seen:
+            continue
+        raw_score = item.get("score", 0.0)
+        score = float(raw_score) if isinstance(raw_score, (int, float)) else 0.0
+        results.append((candidate, max(0.0, min(score, 1.0))))
+        seen.add(candidate)
     return results
 
 
-def _same_domain_links(html: str, source_url: str) -> list[str]:
-    source_host = urlparse(source_url).netloc.lower()
-    links: list[str] = []
-    for element in BeautifulSoup(html, "html.parser").select("a[href]"):
-        href = element.get("href")
-        if not isinstance(href, str):
+def _tavily_result_links(payload: Any, domains: list[str]) -> list[str]:
+    return [url for url, _ in _tavily_results(payload, domains)]
+
+
+def _needs_query_planning(query: str) -> bool:
+    return len(query.split()) >= 8 or len("".join(query.split())) >= 32
+
+
+def _normalized_queries(values: list[Any]) -> list[str]:
+    queries: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        if not isinstance(value, str):
             continue
-        absolute_url = urljoin(source_url, href).split("#", 1)[0]
-        parsed = urlparse(absolute_url)
-        if parsed.scheme in {"http", "https"} and parsed.netloc.lower() == source_host:
-            links.append(absolute_url)
-    return list(dict.fromkeys(links))
+        query = " ".join(value.split()).strip()
+        key = query.casefold()
+        if not query or key in seen:
+            continue
+        queries.append(query)
+        seen.add(key)
+    return queries[:3]
 
 
-def _target_url(template: str, query: str, intent: ChatIntent) -> str | None:
+async def _plan_search_queries(query: str, intent: ChatIntent, settings: Any) -> list[str]:
+    if not _needs_query_planning(query) or not settings.openai_api_key:
+        return [query]
+
     try:
-        target = template.format(query=quote_plus(query), intent=quote_plus(intent))
-    except (KeyError, ValueError):
-        return None
-    parsed = urlparse(target)
-    return target if parsed.scheme in {"http", "https"} and parsed.netloc else None
+        planner = ChatOpenAI(
+            model=settings.openai_model,
+            api_key=settings.openai_api_key,
+            temperature=0,
+        ).with_structured_output(WebSearchQueryPlan)
+        plan = await planner.ainvoke([
+            SystemMessage(content=QUERY_PLANNER_PROMPT),
+            HumanMessage(content=f"Intent: {intent}\nUser request: {query}"),
+        ])
+        values = plan.queries if isinstance(plan, WebSearchQueryPlan) else plan.get("queries", [])
+        planned_queries = _normalized_queries(values)
+        if len(planned_queries) >= 2:
+            logger.info("Web query planner produced %s focused queries", len(planned_queries))
+            return planned_queries
+    except Exception as exc:
+        logger.warning("Web query planning failed: %s", type(exc).__name__)
+
+    return [query]
 
 
-async def search_web_for_recipes(query: str, intent: ChatIntent) -> list[dict[str, Any]]:
-    settings = get_settings()
-    targets = [
-        target
-        for template in settings.web_recipe_search_urls
-        if (target := _target_url(template, query, intent))
-    ]
-    if not targets:
+def _rerank_candidates(result_sets: list[list[tuple[str, float]]], maximum_results: int) -> list[str]:
+    candidates: dict[str, RankedCandidate] = {}
+    first_seen = 0
+    for results in result_sets:
+        for rank, (url, tavily_score) in enumerate(results, start=1):
+            candidate = candidates.get(url)
+            if candidate is None:
+                candidate = RankedCandidate(url=url, first_seen=first_seen)
+                candidates[url] = candidate
+                first_seen += 1
+            candidate.hits += 1
+            candidate.reciprocal_rank += 1 / (60 + rank)
+            candidate.tavily_score = max(candidate.tavily_score, tavily_score)
+
+    ranked = sorted(
+        candidates.values(),
+        key=lambda item: (-item.hits, -item.reciprocal_rank, -item.tavily_score, item.first_seen),
+    )
+    return [candidate.url for candidate in ranked[:maximum_results]]
+
+
+async def _search_web_with_tavily(
+    query: str,
+    settings: Any,
+    tavily_client: AsyncTavilyClient,
+) -> list[tuple[str, float]]:
+    maximum_results = settings.web_recipe_search_max_results
+    domains = _preferred_domains(settings)
+
+    try:
+        logger.info("Tavily web discovery started for query=%r domains=%s", query, domains)
+        search_payload = await tavily_client.search(
+            query=query,
+            search_depth="basic",
+            topic="general",
+            include_domains=domains or None,
+            max_results=maximum_results,
+            include_answer=False,
+            include_raw_content=False,
+            include_images=False,
+        )
+    except Exception as exc:
+        logger.warning("Tavily web discovery failed: %s", type(exc).__name__)
         return []
 
-    maximum_results = settings.web_recipe_search_max_results
-    results: list[dict[str, Any]] = []
-    headers = {"User-Agent": "LetsCookRecipeSearch/1.0"}
-    async with httpx.AsyncClient(headers=headers, follow_redirects=True, timeout=10.0) as client:
-        for target in targets:
-            if len(results) >= maximum_results:
-                break
-            try:
-                response = await client.get(target)
-            except httpx.HTTPError as exc:
-                logger.warning("Recipe search request failed for %s: %s", target, exc)
-                continue
-            if response.status_code >= 400:
-                logger.warning("Recipe search target returned HTTP %s: %s", response.status_code, target)
-                continue
+    candidates = _tavily_results(search_payload, domains)[:maximum_results]
+    logger.info("Tavily web discovery produced %s candidate URL(s)", len(candidates))
+    return candidates
 
-            direct_recipes = _extract_recipes(response.text, str(response.url))
-            results.extend(direct_recipes[: maximum_results - len(results)])
-            if len(results) >= maximum_results:
-                break
 
-            candidates = [
-                link for link in _same_domain_links(response.text, str(response.url))
-                if link != str(response.url).split("#", 1)[0]
-            ]
-            for candidate in candidates[: maximum_results * 4]:
-                if len(results) >= maximum_results:
-                    break
-                try:
-                    candidate_response = await client.get(candidate)
-                except httpx.HTTPError:
-                    continue
-                if candidate_response.status_code >= 400:
-                    continue
-                recipes = _extract_recipes(candidate_response.text, str(candidate_response.url))
-                results.extend(recipes[: maximum_results - len(results)])
+async def search_web_for_recipes(query: str, intent: ChatIntent) -> list[str]:
+    settings = get_settings()
+    if not settings.tavily_api_key:
+        logger.warning("Tavily web discovery is disabled because TAVILY_API_KEY is not configured")
+        return []
 
-    deduplicated: dict[str, dict[str, Any]] = {}
-    for result in results:
-        key = str(result.get("source_url") or result.get("title"))
-        deduplicated.setdefault(key, result)
-    return list(deduplicated.values())[:maximum_results]
+    tavily_client = AsyncTavilyClient(api_key=settings.tavily_api_key)
+    try:
+        planned_queries = await _plan_search_queries(query, intent, settings)
+        result_sets = await asyncio.gather(*(
+            _search_web_with_tavily(planned_query, settings, tavily_client)
+            for planned_query in planned_queries
+        ))
+        return _rerank_candidates(result_sets, settings.web_recipe_search_max_results)
+    finally:
+        await tavily_client.close()
+
+
+@tool
+async def search_web(query: str) -> str:
+    """Find public recipe pages and return ranked candidate URLs only."""
+    results = await search_web_for_recipes(query, "recipe_search")
+    return json.dumps(results, ensure_ascii=False)
