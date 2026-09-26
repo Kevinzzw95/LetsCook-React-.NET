@@ -29,6 +29,7 @@ from app.services.chat_graph.state import ChatGraphState, build_initial_messages
 @dataclass(frozen=True)
 class ChatGraphResult:
     reply: str
+    meal_plan_save_result: dict | None = None
 
 
 def build_chat_graph():
@@ -78,6 +79,7 @@ async def run_chat_graph(
     message: str,
     history: list[ChatMessage],
     user_id: str | None = None,
+    timezone: str | None = None,
 ) -> ChatGraphResult:
     settings = get_settings()
     if not settings.openai_api_key:
@@ -87,6 +89,7 @@ async def run_chat_graph(
     state: ChatGraphState = {
         "messages": build_initial_messages(message, history),
         "user_id": user_id,
+        "timezone": timezone or settings.meal_plan_timezone,
     }
 
     try:
@@ -104,4 +107,4 @@ async def run_chat_graph(
     if not reply:
         raise HTTPException(status_code=502, detail="Chat graph returned an empty response")
 
-    return ChatGraphResult(reply=str(reply))
+    return ChatGraphResult(reply=str(reply), meal_plan_save_result=result.get("meal_plan_save_result"))

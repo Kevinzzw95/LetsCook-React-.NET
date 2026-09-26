@@ -1,4 +1,5 @@
 import json
+from typing import Literal
 
 from langchain_core.tools import BaseTool, tool
 
@@ -17,6 +18,8 @@ async def search_internal(
     maximum_calories: int | None = None,
     minimum_protein: int | None = None,
     allergies: list[str] | None = None,
+    ingredients: list[str] | None = None,
+    ingredient_match_mode: Literal["all", "any"] = "all",
 ) -> str:
     """Search the LetsCook recipe database when saved recipe facts or matches are needed."""
     attributes = {
@@ -26,6 +29,8 @@ async def search_internal(
         "calories": maximum_calories,
         "protein": minimum_protein,
         "allergies": allergies or [],
+        "ingredients": ingredients or [],
+        "ingredient_match_mode": ingredient_match_mode,
     }
     documents = await retrieve_recipe_documents(query, attributes)
     return json.dumps(recipe_documents_to_results(documents), ensure_ascii=False, default=str)

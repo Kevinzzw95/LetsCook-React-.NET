@@ -2,10 +2,10 @@
 
 from fastapi.testclient import TestClient
 
-from api.main import app
-from api.routers import crawler as crawler_router
-from api.schemas.crawler import CrawlerStartRequest
-from api.services.crawler_manager import CrawlerManager
+from app.main import app
+from app.api.routes import crawler as crawler_router
+from app.schemas.crawler import CrawlerStartRequest
+from app.services.crawler_manager import CrawlerManager
 from store.xhs._store_impl import XhsMemoryStoreImplement
 
 

@@ -86,7 +86,7 @@ async def chat(
         raise _database_error(exc) from exc
     await recent_cache.append(user.id, conversation_id, [ChatMessage(role="user", content=message)])
 
-    graph_result = await run_chat_graph(message, history, user_id=user.id)
+    graph_result = await run_chat_graph(message, history, user_id=user.id, timezone=payload.timezone)
     reply = graph_result.reply
 
     try:
@@ -97,6 +97,7 @@ async def chat(
     await recent_cache.append(user.id, conversation_id, [ChatMessage(role="assistant", content=reply)])
     return ChatResponse(
         reply=reply,
+        meal_plan_save_result=graph_result.meal_plan_save_result,
         user_message=user_message,
         assistant_message=assistant_message,
     )

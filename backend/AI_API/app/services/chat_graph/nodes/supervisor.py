@@ -91,7 +91,7 @@ def _requires_internal_seeded_web_search(request: str) -> bool:
 
 def _fallback_intent(request: str) -> ChatIntent:
     normalized = request.lower()
-    if any(term in normalized for term in ("meal plan", "plan", "prep")):
+    if any(term in normalized for term in ("meal plan", "mealplan", "plan", "prep", "安排", "餐单", "餐單")):
         return "meal_plan"
     if any(term in normalized for term in ("shopping", "grocery", "groceries")):
         return "shopping_list"

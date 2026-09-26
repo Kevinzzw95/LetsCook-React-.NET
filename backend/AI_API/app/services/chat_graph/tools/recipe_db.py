@@ -1,6 +1,7 @@
 import asyncio
 import hashlib
 import json
+import re
 from decimal import Decimal
 from functools import lru_cache
 from typing import Any
@@ -332,7 +333,39 @@ def _metadata_filter(attributes: dict[str, Any]) -> dict[str, Any] | None:
     return filters[0] if len(filters) == 1 else {"$and": filters}
 
 
+_INGREDIENT_ALIASES = {
+    "chicken": ("chicken", "鸡肉", "雞肉", "鸡胸", "雞胸", "鸡腿", "雞腿", "鸡翅", "雞翅"),
+    "pork": ("pork", "猪肉", "豬肉", "五花肉", "猪里脊", "豬里肌", "猪排", "豬排"),
+}
+
+
+def ingredient_matches(records: list[dict], requested: str) -> bool:
+    term = " ".join(requested.casefold().split())
+    if not term:
+        return False
+    terms = next((aliases for aliases in _INGREDIENT_ALIASES.values() if term in aliases), (term,))
+    for record in records:
+        for field in ("name", "original"):
+            text = str(record.get(field) or "").casefold()
+            for alias in terms:
+                if re.search(r"[\u3400-\u9fff]", alias):
+                    if alias in text:
+                        return True
+                else:
+                    normalized = " ".join(re.findall(r"\w+", text))
+                    phrase = " ".join(re.findall(r"\w+", alias))
+                    if phrase and f" {phrase} " in f" {normalized} ":
+                        return True
+    return False
+
+
 def _matches_post_filters(document: Document, attributes: dict[str, Any]) -> bool:
+    requested_ingredients = attributes.get("ingredients") or []
+    if requested_ingredients:
+        records = document.metadata.get("ingredients") or []
+        matches = [ingredient_matches(records, term) for term in requested_ingredients]
+        if not (any(matches) if attributes.get("ingredient_match_mode") == "any" else all(matches)):
+            return False
     requested_diet = attributes.get("diet")
     if requested_diet:
         recipe_diets = {_normalize_label(str(diet)) for diet in document.metadata.get("diets", [])}

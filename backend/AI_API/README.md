@@ -143,15 +143,17 @@ MediaCrawler 提供了基于 Web 的可视化操作界面，无需命令行也�
 
 #### 启动 WebUI 服务
 
-```shell
-# 启动 API 服务器（默认端口 8080）
-uv run uvicorn api.main:app --port 8080 --reload
+请在 `backend/AI_API` 目录下运行以下命令。
 
-# 或者使用模块方式启动
-uv run python -m api.main
+```shell
+# 启动 API 服务器（默认端口 8088）
+uv run uvicorn app.main:app --port 8088 --reload
+
+# 或者使用启动脚本
+uv run python run.py
 ```
 
-启动成功后，访问 `http://localhost:8080` 即可打开 WebUI 界面。
+启动成功后，访问 `http://localhost:8088` 即可打开 WebUI 界面。
 
 #### WebUI 功能特性
 

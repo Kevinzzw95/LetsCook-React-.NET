@@ -1,4 +1,5 @@
 import { createApi } from '@reduxjs/toolkit/query/react';
+import { apiSlice } from './apiSlice';
 import { createBaseQueryWithReauth } from './baseQueryWithReauth';
 
 export type AiStoredChatMessage = {
@@ -11,9 +12,19 @@ export type AiStoredChatMessage = {
 export type AiChatRequest = {
     conversationId: string;
     message: string;
+    timezone?: string;
+};
+
+export type MealPlanSaveResult = {
+    status: 'saved' | 'unchanged' | 'failed' | 'not_saved';
+    entries: Array<{ id: string; planned_date: string; meal_type: string; recipe_id: string; recipe_title: string; status: 'saved' | 'existing' }>;
+    unfilled_slots: Array<{ planned_date: string; meal_type: string }>;
+    reason?: string | null;
+    unverified_requirements?: string[];
 };
 
 export type AiChatResponse = {
+    meal_plan_save_result?: MealPlanSaveResult | null;
     reply: string;
     user_message: AiStoredChatMessage;
     assistant_message: AiStoredChatMessage;
@@ -45,11 +56,21 @@ export const aiApiSlice = createApi({
             query: conversationId => `conversations/${conversationId}/messages`
         }),
         chat: builder.mutation<AiChatResponse, AiChatRequest>({
-            query: ({ conversationId, message }) => ({
+            query: ({ conversationId, message, timezone }) => ({
                 url: `conversations/${conversationId}/messages`,
                 method: 'POST',
-                body: { message }
-            })
+                body: { message, timezone: timezone ?? Intl.DateTimeFormat().resolvedOptions().timeZone }
+            }),
+            async onQueryStarted(_request, { dispatch, queryFulfilled }) {
+                try {
+                    const { data } = await queryFulfilled;
+                    if (data.meal_plan_save_result?.status === 'saved' || data.meal_plan_save_result?.status === 'unchanged') {
+                        dispatch(apiSlice.util.invalidateTags(['MealPlan']));
+                    }
+                } catch {
+                    // A failed chat request has no confirmed calendar mutation.
+                }
+            }
         }),
         deleteConversation: builder.mutation<void, string>({
             query: conversationId => ({

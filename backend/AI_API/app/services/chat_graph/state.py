@@ -28,6 +28,8 @@ SYSTEM_MESSAGE = (
 class ChatGraphState(TypedDict, total=False):
     messages: Annotated[list[Any], add_messages]
     user_id: str | None
+    timezone: str
+    meal_plan_save_result: dict[str, Any]
     meal_plan: dict[str, Any]
     request: str
     recipe_attributes: dict[str, Any]

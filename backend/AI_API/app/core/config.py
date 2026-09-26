@@ -4,7 +4,8 @@ from pathlib import Path
 from typing import Optional
 
 from dotenv import load_dotenv
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+from app.services.meal_plan_dates import validate_timezone
 
 
 BASE_DIR = Path(__file__).resolve().parents[2]
@@ -38,6 +39,13 @@ class Settings(BaseModel):
     tavily_api_key: Optional[str] = None
     jwt_secret: Optional[str] = None
     redis_url: Optional[str] = None
+    meal_plan_timezone: str = "America/Toronto"
+
+    @field_validator("meal_plan_timezone")
+    @classmethod
+    def valid_meal_plan_timezone(cls, value):
+        return validate_timezone(value)
+
     chat_history_limit: int = 40
     chat_history_ttl_seconds: int = 604800
     langsmith_tracing: bool = False
@@ -67,6 +75,7 @@ def get_settings() -> Settings:
         tavily_api_key=os.environ.get("TAVILY_API_KEY"),
         jwt_secret=os.environ.get("JWT_SECRET"),
         redis_url=os.environ.get("REDIS_URL"),
+        meal_plan_timezone=os.environ.get("MEAL_PLAN_TIMEZONE", "America/Toronto"),
         chat_history_limit=int(os.environ.get("CHAT_HISTORY_LIMIT", "40")),
         chat_history_ttl_seconds=int(os.environ.get("CHAT_HISTORY_TTL_SECONDS", "604800")),
         langsmith_tracing=_get_bool_env("LANGSMITH_TRACING"),

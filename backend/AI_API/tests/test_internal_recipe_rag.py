@@ -261,3 +261,25 @@ def test_answer_context_contains_retrieved_recipe_documents():
 
     assert "Chicken Florentine" in context
     assert "Chicken, spinach, and garlic" in context
+
+
+@pytest.mark.asyncio
+async def test_internal_search_filters_required_ingredients_before_result_limit(monkeypatch):
+    from app.services.chat_graph.tools import chat_tools
+
+    matching = recipe_db._row_to_document(_recipe_row())
+    unrelated = recipe_db._row_to_document(_recipe_row(8, "Other recipe"))
+    unrelated.metadata["ingredients"] = [{"name": "rice"}]
+    store = FakeVectorStore(results=[(unrelated, 0.99), (matching, 0.8)])
+
+    async def fake_sync(vector_store):
+        assert vector_store is store
+
+    monkeypatch.setattr(recipe_db, "get_settings", lambda: _settings(recipe_search_limit=1))
+    monkeypatch.setattr(recipe_db, "_build_vector_store", lambda: store)
+    monkeypatch.setattr(recipe_db, "sync_recipe_embeddings", fake_sync)
+    result = json.loads(await chat_tools.search_internal.ainvoke({
+        "query": "spinach recipes", "user_id": "owner", "ingredients": ["spinach"],
+    }))
+    assert [item["id"] for item in result] == [7]
+    assert store.search_call[2] == {"user_id": {"$eq": "owner"}}
