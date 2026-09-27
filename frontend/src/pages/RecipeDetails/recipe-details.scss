@@ -204,3 +204,150 @@
         }
     }
 }
+
+.recipe-image-gallery {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    overscroll-behavior-x: contain;
+
+    &__slide {
+        flex: 0 0 100%;
+        min-width: 0;
+        height: 100%;
+        padding: 0;
+        border: 0;
+        background: var(--bs-secondary-bg, #e9ecef);
+        scroll-snap-align: start;
+        cursor: zoom-in;
+
+        .main-image {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
+
+    &:focus-visible,
+    &__slide:focus-visible {
+        outline: 3px solid var(--accent-color, #fda085);
+        outline-offset: -4px;
+    }
+
+    &__hint {
+        position: absolute;
+        top: 0.75rem;
+        right: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.45rem 0.7rem;
+        border-radius: 999px;
+        color: white;
+        background: rgba(15, 23, 42, 0.8);
+        font-size: 0.8rem;
+        pointer-events: none;
+    }
+
+    &__navigation {
+        position: absolute;
+        inset: 40% 0.75rem auto;
+        display: flex;
+        justify-content: space-between;
+        pointer-events: none;
+
+        button {
+            pointer-events: auto;
+            width: 44px;
+            height: 44px;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            border-radius: 50%;
+            background: rgba(15, 23, 42, 0.8);
+            color: white;
+
+            &:disabled { opacity: 0.4; cursor: default; }
+            &:focus-visible { outline: 3px solid white; outline-offset: 3px; }
+        }
+    }
+}
+
+.recipe-image-lightbox {
+    width: min(94vw, 1400px);
+    max-width: 94vw;
+    height: 90vh;
+    height: 90dvh;
+    max-height: 90dvh;
+    padding: 0;
+    margin: auto;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 1rem;
+    background: #10151d;
+    color: white;
+    overflow: hidden;
+
+    &[open] { display: flex; flex-direction: column; }
+    &::backdrop { background: rgba(0, 0, 0, 0.85); }
+
+    button {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        min-width: 44px;
+        min-height: 44px;
+        padding: 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        border-radius: 0.5rem;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+
+        &:hover:not(:disabled) { background: rgba(255, 255, 255, 0.12); }
+        &:disabled { opacity: 0.35; cursor: default; }
+        &:focus-visible { outline: 3px solid white; outline-offset: -3px; }
+    }
+
+    &__toolbar, &__navigation {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-shrink: 0;
+        padding: 0.5rem 0.75rem;
+    }
+
+    &__toolbar {
+        h2 { flex: 1; min-width: 0; margin: 0; font-size: 1rem; color: inherit; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+        span { white-space: nowrap; font-size: 0.875rem; }
+    }
+
+    &__navigation {
+        justify-content: space-between;
+        span { font-size: 0.8rem; text-align: center; }
+    }
+
+    &__viewport {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+        overscroll-behavior: contain;
+        &:focus-visible { outline: 2px solid white; outline-offset: -2px; }
+    }
+
+    button.recipe-image-lightbox__image {
+        display: block;
+        width: 100%;
+        height: 100%;
+        padding: 0;
+        border: 0;
+        border-radius: 0;
+        cursor: zoom-in;
+        background: transparent;
+
+        &.is-zoomed { width: 200%; height: 200%; cursor: zoom-out; }
+        img { display: block; width: 100%; height: 100%; object-fit: contain; }
+    }
+}

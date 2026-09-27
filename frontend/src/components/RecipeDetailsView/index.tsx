@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, Clock, Plus, Users, Utensils } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, Plus, Users, Utensils, ZoomIn } from 'lucide-react';
 import type { Ingredient } from '../../types/ingredient';
 import type { instruction } from '../../types/instruction';
 import '../../pages/RecipeDetails/recipe-details.scss';
+import ImageLightbox from './ImageLightbox';
 
 interface RecipeDetailsViewRecipe {
     id?: string | number;
@@ -42,6 +43,10 @@ const RecipeDetailsView = ({
     isDeletingRecipe = false
 }: Props) => {
     const visibleThumbnailCount = 4;
+    const galleryRef = useRef<HTMLDivElement>(null);
+    const selectedIndexRef = useRef(0);
+    const imageTriggerRef = useRef<HTMLButtonElement | null>(null);
+    const [isImageOpen, setIsImageOpen] = useState(false);
     const [isMobileViewport, setIsMobileViewport] = useState(false);
     const imageSources = useMemo(
         () =>
@@ -82,7 +87,35 @@ const RecipeDetailsView = ({
     useEffect(() => {
         setCurrentImageIndex(0);
         setThumbnailStartIndex(0);
+        selectedIndexRef.current = 0;
+        galleryRef.current?.scrollTo(0, 0);
+        setIsImageOpen(false);
     }, [imageSources]);
+
+    useEffect(() => {
+        const gallery = galleryRef.current;
+        if (!gallery) return;
+        const observer = new ResizeObserver(() => {
+            gallery.scrollLeft = selectedIndexRef.current * gallery.clientWidth;
+        });
+        observer.observe(gallery);
+        return () => observer.disconnect();
+    }, [imageSources.length]);
+
+    const selectImage = (index: number) => {
+        const nextIndex = Math.max(0, Math.min(imageSources.length - 1, index));
+        selectedIndexRef.current = nextIndex;
+        setCurrentImageIndex(nextIndex);
+        const gallery = galleryRef.current;
+        if (gallery) gallery.scrollTo({ left: nextIndex * gallery.clientWidth });
+    };
+
+    const closeImage = () => {
+        setIsImageOpen(false);
+        // Restore focus to the now-visible slide after navigating in the popup.
+        const trigger = galleryRef.current?.querySelectorAll<HTMLButtonElement>('.recipe-image-gallery__slide')[selectedIndexRef.current];
+        (trigger ?? imageTriggerRef.current)?.focus({ preventScroll: true });
+    };
 
     useEffect(() => {
         if (isMobileViewport) {
@@ -90,7 +123,9 @@ const RecipeDetailsView = ({
         }
 
         const thumbnailEndIndex = thumbnailStartIndex + visibleThumbnailCount - 1;
-        if (currentImageIndex > thumbnailEndIndex) {
+        if (currentImageIndex < thumbnailStartIndex) {
+            setThumbnailStartIndex(currentImageIndex);
+        } else if (currentImageIndex > thumbnailEndIndex) {
             setThumbnailStartIndex(currentImageIndex - visibleThumbnailCount + 1);
         }
     }, [currentImageIndex, isMobileViewport, thumbnailStartIndex]);
@@ -144,12 +179,56 @@ const RecipeDetailsView = ({
 
     return (
         <>
+            {isImageOpen && currentImage && (
+                <ImageLightbox src={currentImage} title={recipe.title} index={currentImageIndex}
+                    count={imageSources.length} onSelect={selectImage} onClose={closeImage} />
+            )}
             <div className="row g-4 mb-5">
                 <div className="col-lg-6">
                     <div className="position-relative rounded-4 overflow-hidden shadow-sm" style={{ aspectRatio: '4/3' }}>
                         {imageSources.length > 0 ? (
                             <>
-                                <img src={currentImage} alt={recipe.title} className="w-100 h-100 object-fit-cover" />
+                                <div ref={galleryRef} className="recipe-image-gallery" role="region"
+                                    aria-label="Recipe photos" tabIndex={0}
+                                    onScroll={(event) => {
+                                        const gallery = event.currentTarget;
+                                        if (!gallery.clientWidth) return;
+                                        const index = Math.max(0, Math.min(imageSources.length - 1,
+                                            Math.round(gallery.scrollLeft / gallery.clientWidth)));
+                                        selectedIndexRef.current = index;
+                                        setCurrentImageIndex(index);
+                                    }}
+                                    onKeyDown={(event) => {
+                                        if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                                            event.preventDefault();
+                                            selectImage(currentImageIndex + (event.key === 'ArrowRight' ? 1 : -1));
+                                        }
+                                    }}>
+                                    {imageSources.map((image, index) => (
+                                        <button key={`${image.src}-${index}`} type="button"
+                                            className="recipe-image-gallery__slide"
+                                            tabIndex={index === currentImageIndex ? 0 : -1}
+                                            aria-label={`Enlarge ${recipe.title || 'recipe'} photo ${index + 1}`}
+                                            aria-haspopup="dialog"
+                                            onClick={(event) => {
+                                                imageTriggerRef.current = event.currentTarget;
+                                                selectImage(index);
+                                                setIsImageOpen(true);
+                                            }}>
+                                            <img src={image.src} alt={`${recipe.title} — photo ${index + 1}`}
+                                                className="main-image" draggable={false} loading={index === 0 ? 'eager' : 'lazy'} />
+                                        </button>
+                                    ))}
+                                </div>
+                                <span className="recipe-image-gallery__hint" aria-hidden="true"><ZoomIn size={16} /> Click to enlarge</span>
+                                {imageSources.length > 1 && (
+                                    <div className="recipe-image-gallery__navigation">
+                                        <button type="button" aria-label="Previous recipe image" disabled={currentImageIndex === 0}
+                                            onClick={() => selectImage(currentImageIndex - 1)}><ChevronLeft size={22} /></button>
+                                        <button type="button" aria-label="Next recipe image" disabled={currentImageIndex === imageSources.length - 1}
+                                            onClick={() => selectImage(currentImageIndex + 1)}><ChevronRight size={22} /></button>
+                                    </div>
+                                )}
                                 <div
                                     className="image-samll position-absolute bottom-0 start-0 w-100 p-3 bg-gradient-dark text-white"
                                     style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.7), transparent)' }}
@@ -175,7 +254,9 @@ const RecipeDetailsView = ({
                                                         key={`${image.src}-${actualIndex}`}
                                                         type="button"
                                                         className={`image-samll__thumbnail ${actualIndex === currentImageIndex ? 'image-samll__thumbnail--active' : ''}`}
-                                                        onClick={() => setCurrentImageIndex(actualIndex)}
+                                                        onClick={() => selectImage(actualIndex)}
+                                                        aria-label={`Show recipe photo ${actualIndex + 1}`}
+                                                        aria-current={actualIndex === currentImageIndex ? "true" : undefined}
                                                     >
                                                         <img
                                                             src={image.src}

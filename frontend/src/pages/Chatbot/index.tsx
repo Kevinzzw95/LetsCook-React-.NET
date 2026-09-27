@@ -186,14 +186,6 @@ const Chatbot = () => {
                             Ask for meal ideas, ingredient substitutions, prep shortcuts, or help deciding what to cook
                             next. This page is ready for the future chatbot flow and already gives users a clear entry point.
                         </p>
-                        <div className="chatbot-actions d-flex flex-wrap gap-2">
-                            <Link to="/recipe-list/" className="btn btn-sunny rounded-pill px-4 py-2">
-                                Explore Recipes
-                            </Link>
-                            <Link to="/new-recipe/" className="btn btn-outline-sunny rounded-pill px-4 py-2">
-                                Create a Recipe
-                            </Link>
-                        </div>
                     </div>
                     <div className="col-lg-5">
                         <div className="chatbot-preview">
@@ -219,43 +211,6 @@ const Chatbot = () => {
                                 <MessageSquareText size={18} />
                                 Start chatting
                             </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div className="row g-3 g-lg-4">
-                <div className="col-lg-4">
-                    <div className="card-glass chatbot-feature-card p-3 p-lg-4 h-100">
-                        <div className="chatbot-feature-icon">
-                            <ChefHat size={22} />
-                        </div>
-                        <h2 className="h5 fw-bold mb-2">Prompt-ready cooking help</h2>
-                        <p className="text-secondary mb-0">
-                            Great for fast “what should I cook?” moments, ingredient substitutions, and meal prep ideas.
-                        </p>
-                    </div>
-                </div>
-
-                <div className="col-lg-8">
-                    <div className="card-glass chatbot-prompts p-3 p-lg-4">
-                        <div className="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-                            <div>
-                                <div className="chatbot-section-kicker">Starter prompts</div>
-                                <h2 className="h4 fw-bold mb-0">Use these ideas when the chatbot is connected.</h2>
-                            </div>
-                        </div>
-
-                        <div className="chatbot-prompt-list">
-                            {starterPrompts.map((prompt) => (
-                                <button key={prompt} type="button" className="chatbot-prompt-chip" onClick={() => {
-                                    setChatInput(prompt);
-                                    openChatRoom();
-                                }}>
-                                    <Sparkles size={16} />
-                                    <span>{prompt}</span>
-                                </button>
-                            ))}
                         </div>
                     </div>
                 </div>
