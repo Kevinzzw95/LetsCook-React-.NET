@@ -57,7 +57,7 @@ const Filter = ({ isOpenMobileFilter, openFilter, resultCount, counts }: Props) 
     };
 
     return (
-        <div className={`refinement-bar card-glass py-4 px-2 d-lg-block ${isOpenMobileFilter ? 'active' : ''}`}>
+        <div id="recipe-filters" className={`refinement-bar py-4 px-2 d-lg-block ${isOpenMobileFilter ? 'active' : ''}`}>
             <div className="refinement-container">
                 <div className='refinement-header py-2 d-md-none'>
                     <div className="d-flex justify-content-between align-items-center">

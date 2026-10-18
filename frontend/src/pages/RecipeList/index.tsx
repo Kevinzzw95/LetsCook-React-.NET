@@ -3,9 +3,7 @@ import RecipeCard from '../../components/RecipeCard';
 import { useEffect, useState } from "react";
 import type { FormEvent } from 'react';
 import './recipe-list.scss'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faFilter } from '@fortawesome/free-solid-svg-icons';
-import { Search, X } from 'lucide-react';
+import { Search, Settings2, X } from 'lucide-react';
 import { useDeleteRecipeMutation, useGetRecipeFacetsQuery, useSearchRecipesQuery } from '../../redux/recipe/recipeApiSlice';
 import { useSearchParams } from 'react-router-dom';
 import { RefinementCounts } from '../../types/refinements';
@@ -21,6 +19,7 @@ const RecipeList = () => {
     const type = searchParams.get('type') ?? undefined;
     const cuisine = searchParams.get('cuisine') ?? undefined;
     const diet = searchParams.get('diet') ?? undefined;
+    const activeFilterCount = [type, cuisine, diet].filter((value) => value?.trim()).length;
     const [searchInput, setSearchInput] = useState(query);
     const [deletingRecipeId, setDeletingRecipeId] = useState<number | null>(null);
     const [deleteRecipe] = useDeleteRecipeMutation();
@@ -46,7 +45,7 @@ const RecipeList = () => {
 
     const recipeList = (searchData?.items ?? []).map((recipe: recipeCommon) => ({
         ...recipe,
-        images: recipe.imageUrls ?? recipe.images ?? []
+        images: recipe.imageUrls ?? []
     }));
     const totalPages = searchData?.totalPages ?? 1;
     const totalCount = searchData?.totalCount ?? 0;
@@ -162,7 +161,17 @@ const RecipeList = () => {
                             </div>
                             <div className="recipe-search-actions">
                                 <div className='search-result-header d-flex justify-content-md-end justify-content-between align-items-center'>
-                                    <FontAwesomeIcon className='recipe-filter d-md-none' icon={faFilter} onClick={openFilter}/>
+                                    <button
+                                        type="button"
+                                        className="recipe-filter d-md-none"
+                                        onClick={openFilter}
+                                        aria-label={`Filters, ${activeFilterCount} active ${activeFilterCount === 1 ? 'filter' : 'filters'}`}
+                                        aria-expanded={isOpenMobileFilter}
+                                        aria-controls="recipe-filters"
+                                    >
+                                        <Settings2 size={26} strokeWidth={1.6} aria-hidden="true" />
+                                        <span aria-hidden="true">{activeFilterCount}</span>
+                                    </button>
                                     <span className="search-result-count">
                                         {totalCount} Results
                                     </span>
@@ -176,14 +185,14 @@ const RecipeList = () => {
                     <div className='col-lg-3'>
                         <Filter {...props}/>
                     </div>
-                    <div className="col-md-7 col-lg-9">
+                    <div className="col-12 col-lg-9">
                         {recipeList.length > 0 ? (
                             <div className='row g-4'>
                                 {
-                                    recipeList.map((recipe, index) =>
+                                    recipeList.map((recipe) =>
                                         <RecipeCard
                                             recipe={recipe}
-                                            key={index}
+                                            key={recipe.id}
                                             onDelete={handleDeleteRecipe}
                                             isDeleting={deletingRecipeId === Number(recipe.id)}
                                         />

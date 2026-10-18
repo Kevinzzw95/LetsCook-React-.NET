@@ -1,7 +1,7 @@
 .refinement-bar {
     padding-left: 1rem;
     padding-right: 1rem;
-    @media (max-width: 768px) {
+    @media (max-width: 767.98px) {
         display: none;
         position: fixed;
         z-index: 2021;
@@ -80,7 +80,8 @@
                     gap: 0.25rem;
 
                     &.active {
-                        border: solid;
+                        border: solid 2px #fda085;
+                        border-radius: 5px;
                     }
 
                     &.disabled {

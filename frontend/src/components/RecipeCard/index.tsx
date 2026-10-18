@@ -1,7 +1,8 @@
-import { Clock, Trash2, Users } from 'lucide-react';
-import { recipeCommon } from '../../types/recipe';
+import { useState } from 'react';
+import { Clock3, Leaf, Trash2, Users, Utensils } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import type { recipeCommon } from '../../types/recipe';
 import './recipe-card.scss';
-import { useNavigate } from "react-router-dom";
 
 type Props = {
     recipe: Partial<recipeCommon>;
@@ -9,103 +10,64 @@ type Props = {
     isDeleting?: boolean;
 }
 
-const RecipeCard = ({ recipe, onDelete, isDeleting = false } : Props) => {
-    const navigate = useNavigate();
+const RecipeCard = ({ recipe, onDelete, isDeleting = false }: Props) => {
+    const [failedImage, setFailedImage] = useState<string | null>(null);
+    const image = recipe.imageUrls?.[0];
+    const title = recipe.title?.trim() || 'Untitled recipe';
+    const category = recipe.type || 'Recipe';
+    const positiveMinutes = (value?: number) => typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : 0;
+    const minutes = positiveMinutes(recipe.readyInMinutes)
+        || positiveMinutes(recipe.preparationMinutes) + positiveMinutes(recipe.cookingMinutes);
+    const servings = typeof recipe.servings === 'number' && recipe.servings > 0 ? recipe.servings : null;
+    const diet = recipe.diet && recipe.diet.toLowerCase() !== 'none' ? recipe.diet : null;
+    const detail = diet || recipe.cuisine || 'Home cooking';
 
-    const goToRecipeDetails = () => {
-        if (!recipe.id) return;
-        navigate(`/recipe-details/${recipe.id}`);
-    };
-
-    const handleCardKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            goToRecipeDetails();
-        }
-    };
-    
     return (
-        <div key={recipe.id} className="col-md-4 col-xl-3 animate-fade-in">
-            <div
-                className="card recipe-card-clickable h-100 border-0 shadow-sm rounded-4 overflow-hidden hover-scale"
-                onClick={goToRecipeDetails}
-                onKeyDown={handleCardKeyDown}
-                role="link"
-                tabIndex={0}
-                aria-label={`View details for ${recipe.title ?? 'recipe'}`}
-            >
-                <div className="position-relative" style={{ height: '250px' }}>
-                <img 
-                    src={recipe.imageUrls && recipe.imageUrls[0]} 
-                    alt={recipe.title} 
-                    className="w-100 h-100 object-fit-cover"
-                />
-                {/* <button className="btn btn-light rounded-circle position-absolute top-0 end-0 m-3 p-2 shadow-sm text-secondary hover-text-danger transition-all">
-                    <Heart size={18} />
-                </button> */}
-                <div className="position-absolute bottom-0 start-0 m-3">
-                    <span className="badge bg-white text-dark shadow-sm px-2 py-1 rounded-pill fw-bold" style={{ fontSize: '0.75rem' }}>
-                        {recipe.cuisine}
-                    </span>
-                </div>
-                </div>
-                
-                <div className="card-body p-4 d-flex flex-column">
-                    {onDelete && (
-                        <div className="d-flex justify-content-between mb-3">
-                            <div>{recipe.title}</div>
-                            <button
-                                type="button"
-                                className="recipe-card-delete btn btn-light border-0 rounded-pill d-inline-flex align-items-center gap-2"
-                                onClick={(event) => {
-                                    event.stopPropagation();
-                                    onDelete(recipe);
-                                }}
-                                disabled={isDeleting} 
-                            >
-                                <Trash2 size={14} />
-
-                            </button>
+        <div className="col-12 col-md-6 col-xl-4 recipe-card-column">
+            <article className="recipe-card">
+                <div className="recipe-card__photo">
+                    {image && failedImage !== image ? (
+                        <img src={image} alt={title} loading="lazy" decoding="async"
+                            onError={() => setFailedImage(image)} />
+                    ) : (
+                        <div className="recipe-card__placeholder" role="img" aria-label="No recipe photo available">
+                            <Utensils size={52} strokeWidth={1.4} aria-hidden="true" />
                         </div>
                     )}
-                {/* <div className="d-flex justify-content-between align-items-start mb-2">
-                    <h3 className="h5 fw-bold text-dark mb-0 line-clamp-2">{recipe.title}</h3>
-                    <div className="d-flex align-items-center gap-1 text-warning small fw-bold">
-                    <Star size={14} fill="currentColor" /> {recipe.rating}
-                    </div>
-                </div> 
-                
-                    <p className="text-secondary small mb-3 flex-grow-1" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                        {recipe.description}
-                    </p>*/}
-
-                    <div className="d-flex align-items-center gap-3 text-secondary small mb-2">
-                        <div className="d-flex align-items-center gap-1">
-                            <Clock size={14} /> {recipe.preparationMinutes}
-                        </div>
-                        {/* <div className="d-flex align-items-center gap-1">
-                        <Flame size={14} /> {recipe.nutrition.calories} kcal
-                        </div> */}
-                        <div className="d-flex align-items-center gap-1">
-                            <Users size={14} /> {recipe.servings}
-                        </div>
-                    </div>
-
-                    <div className="d-flex gap-1 flex-wrap">
-                        {recipe.diet && recipe.diet !== 'None' && (
-                            <span className="badge bg-success-subtle text-success border border-success-subtle rounded-pill px-2 fw-normal">
-                                {recipe.diet}
-                            </span>
-                        )}
-                        <span className="badge bg-secondary-subtle text-secondary border border-secondary-subtle rounded-pill px-2 fw-normal">
-                            {recipe.type}
+                    <span className="recipe-card__category" title={category}>
+                        <Utensils size={18} aria-hidden="true" />
+                        <span>{category}</span>
+                    </span>
+                    {onDelete && (
+                        <button type="button" className="recipe-card__delete"
+                            aria-label={`Delete ${title}`} title={`Delete ${title}`}
+                            onClick={() => onDelete(recipe)} disabled={isDeleting}>
+                            <Trash2 size={18} aria-hidden="true" />
+                        </button>
+                    )}
+                </div>
+                <div className="recipe-card__body">
+                    <h3 className="recipe-card__title pb-4" title={title}>
+                        {recipe.id ? <Link to={`/recipe-details/${recipe.id}`} className="recipe-card__link">{title}</Link> : title}
+                    </h3>
+                    <div className="recipe-card__facts">
+                        <span className="recipe-card__pill recipe-card__pill--servings">
+                            <Users size={18} aria-hidden="true" />
+                            {servings ? `${servings} servings` : 'Servings —'}
+                        </span>
+                        <span className="recipe-card__pill recipe-card__pill--time">
+                            <Clock3 size={18} aria-hidden="true" />
+                            {minutes ? `${minutes} mins` : 'Time —'}
+                        </span>
+                        <span className="recipe-card__pill recipe-card__pill--detail" title={detail}>
+                            {diet ? <Leaf size={18} aria-hidden="true" /> : <Utensils size={18} aria-hidden="true" />}
+                            <span>{detail}</span>
                         </span>
                     </div>
-
                 </div>
-            </div>
+            </article>
         </div>
-    )
-}
+    );
+};
 
 export default RecipeCard;
