@@ -8,7 +8,7 @@ import pytest
 from fastapi import HTTPException
 from pydantic import ValidationError
 
-from app.core.auth import USER_ID_CLAIM, decode_user_id
+from app.core.auth import decode_user_id
 from app.schemas.chat import ChatMessage
 
 
@@ -27,9 +27,9 @@ def _token(secret: str, payload: dict) -> str:
     return f"{signing_input}.{signature}"
 
 
-def test_decode_user_id_accepts_dotnet_name_identifier_claim():
+def test_decode_user_id_accepts_main_api_name_identifier_claim():
     secret = "a-long-test-secret"
-    token = _token(secret, {USER_ID_CLAIM: "user-123", "exp": time.time() + 60})
+    token = _token(secret, {"nameid": "user-123", "exp": time.time() + 60})
 
     assert decode_user_id(token, secret) == "user-123"
 

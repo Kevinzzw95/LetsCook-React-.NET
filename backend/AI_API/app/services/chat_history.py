@@ -40,11 +40,11 @@ class ChatHistoryRepository:
         return self._pool
 
     async def _ensure_schema(self) -> None:
-        if self._schema_ready:
+        if self._schema_ready or not get_settings().auto_create_schema:
             return
 
         async with self._schema_lock:
-            if self._schema_ready:
+            if self._schema_ready or not get_settings().auto_create_schema:
                 return
             if self._pool is None:
                 raise RuntimeError("Chat database pool is unavailable")

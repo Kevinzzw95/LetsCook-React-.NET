@@ -1,13 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import './ingredient-editor.scss'
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faPen, faXmark } from '@fortawesome/free-solid-svg-icons';
-import { useFormContext, useFieldArray, Control, UseFormRegister } from 'react-hook-form';
 import { ErrorMessage } from '@hookform/error-message';
-import { RecipeDraft } from '../../../types/recipe';
-import { Ingredient, Unit } from '../../../types/ingredient';
-import { v4 as uuidv4 } from 'uuid';
 import { GripVertical, Plus, Trash2 } from 'lucide-react';
+import { Control, UseFormRegister, useFieldArray, useFormContext } from 'react-hook-form';
+import { v4 as uuidv4 } from 'uuid';
+import { Ingredient, Unit } from '../../../types/ingredient';
+import { RecipeDraft } from '../../../types/recipe';
+import './ingredient-editor.scss';
 
 type Props = {
     currRecipe: RecipeDraft;

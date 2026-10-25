@@ -21,7 +21,7 @@ async function bootstrap() {
 			if (!origin) return callback(null, true);
 			try {
 				const url = new URL(origin);
-				callback(null, configuredOrigins.includes(origin) || url.hostname === 'localhost' || url.hostname === '127.0.0.1');
+				callback(null, configuredOrigins.includes(origin) || (config.get('NODE_ENV') !== 'production' && ['localhost', '127.0.0.1'].includes(url.hostname)));
 			} catch { callback(null, false); }
 		},
 	});
@@ -32,7 +32,7 @@ async function bootstrap() {
 		exceptionFactory: (errors) => validationProblem(collectErrors(errors)),
 	}));
 	app.useGlobalFilters(new ApiExceptionFilter());
-	await app.listen(config.get<number>('PORT', 5001));
+	await app.listen(Number(config.get('PORT', 5001)), '0.0.0.0');
 }
 
 void bootstrap();

@@ -1,27 +1,21 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import './edit-recipe.scss';
-import { useEffect, useState } from 'react';
-import ImageEditor from '../../components/RecipeEditor/ImageEditor';
-import OverviewEditor from '../../components/RecipeEditor/OverviewEditor';
-import IngredientsEditor from '../../components/RecipeEditor/IngredientsEditor';
-import StepsEditor from '../../components/RecipeEditor/StepsEditor';
-import NotesEditor from '../../components/RecipeEditor/NotesEditor';
-import { FormProvider, FieldValues, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { validationSchema } from './recipeFormValidation';
-import { RecipeDraft, recipeCommon, Tab } from '../../types/recipe';
-import ScanRecipeEditor from '../../components/RecipeEditor/ScanRecipeEditor';
-import RecipeDetails from '../RecipeDetails';
-import Preview from '../../components/RecipeEditor/Preview';
-import { useCreateRecipeMutation, useGetRecipeQuery, useUpdateRecipeMutation } from '../../redux/recipe/recipeApiSlice';
-import UploadByUrlEditor from '../../components/RecipeEditor/UploadByUrlEditor';
-import { BookOpen, CheckCircle2, ChevronRight, ChefHat, Image as ImageIcon, List } from 'lucide-react';
+import { BookOpen, CheckCircle2, ChevronRight, Image as ImageIcon, List } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { FormProvider, useForm } from "react-hook-form";
 import { useNavigate, useParams } from 'react-router-dom';
+import ImageEditor from '../../components/RecipeEditor/ImageEditor';
+import IngredientsEditor from '../../components/RecipeEditor/IngredientsEditor';
+import OverviewEditor from '../../components/RecipeEditor/OverviewEditor';
+import Preview from '../../components/RecipeEditor/Preview';
+import ScanRecipeEditor from '../../components/RecipeEditor/ScanRecipeEditor';
+import StepsEditor from '../../components/RecipeEditor/StepsEditor';
+import UploadByUrlEditor from '../../components/RecipeEditor/UploadByUrlEditor';
+import { CRAWLER_ENABLED } from '../../config/environment';
+import { useCreateRecipeMutation, useGetRecipeQuery, useUpdateRecipeMutation } from '../../redux/recipe/recipeApiSlice';
+import { RecipeDraft, Tab } from '../../types/recipe';
+import './edit-recipe.scss';
+import { validationSchema } from './recipeFormValidation';
 
-interface Props {
-    recipe?: recipeCommon;
-    cancelEdit: () => void;
-}
 
 const EMPTY_RECIPE: RecipeDraft = {
     title: '',
@@ -33,6 +27,7 @@ const EMPTY_RECIPE: RecipeDraft = {
     preparationMinutes: 0,
     prepTime: 0,
     ingredients: [],
+    ingredientsEn: [],
     steps: [],
     images: [],
 };
@@ -55,7 +50,7 @@ const EditRecipe = () => {
         { id: Tab.STEPS, label: 'Steps', icon: CheckCircle2 },
         { id: Tab.IMAGES, label: 'Images', icon: ImageIcon }
     ];
-    
+
     const [ currTab, setCurrTab ] = useState<Tab>(recipeId ? Tab.OVERVIEW : Tab.UPLOAD);
     const [ hasErrors, setHasErrors ] = useState<boolean>(false);
     const [ currRecipe, setCurrRecipe  ] = useState<RecipeDraft>(EMPTY_RECIPE);
@@ -71,21 +66,17 @@ const EditRecipe = () => {
         setCurrRecipe((prev) => ({ ...prev, ...updates }));
     };
 
-    const [
-        createRecipe, // This is the mutation trigger
-        { isLoading: isUpdating }, // This is the destructured mutation result
-    ] = useCreateRecipeMutation();
-    const [updateRecipe, { isLoading: isSavingUpdate }] = useUpdateRecipeMutation();
+    const [createRecipe] = useCreateRecipeMutation();
+    const [updateRecipe] = useUpdateRecipeMutation();
     const { data: existingRecipe } = useGetRecipeQuery(recipeId!, { skip: !recipeId });
 
     const {
         reset,
         clearErrors,
-        control, 
+        control,
         register,
         handleSubmit,
-        watch,
-        formState: { isSubmitting, isDirty, isSubmitted, errors } 
+        formState: { isSubmitted, errors }
     } = methods;
 
     const handleSubmitData = async (data: RecipeDraft) => {
@@ -117,6 +108,7 @@ const EditRecipe = () => {
 
         const mappedRecipe: RecipeDraft = {
             title: existingRecipe.title,
+            ingredientsEn: [],
             servings: existingRecipe.servings,
             preparationMinutes: existingRecipe.preparationMinutes ?? 0,
             type: existingRecipe.type ?? '',
@@ -149,15 +141,7 @@ const EditRecipe = () => {
         setHasErrors(isSubmitted && Object.keys(errors).length > 0);
     }, [errors, isSubmitted])
 
-    const watchFile = watch("file", null);
-    useEffect(() => {
-        //if (recipe && !watchFile && !isDirty) reset(recipe);
-        return () => {
-            if (watchFile) URL.revokeObjectURL(watchFile.preview);
-        };
-    }, [reset, watchFile, isDirty]);
-
-    const handleNext = (event: Event) => {
+    const handleNext = (event: React.MouseEvent<HTMLButtonElement>) => {
         event.preventDefault();
         const currentIndex = tabs.findIndex(t => t.id === currTab);
         if (currentIndex < tabs.length - 1) {
@@ -174,13 +158,13 @@ const EditRecipe = () => {
                             <div className="d-flex flex-column flex-md-row align-items-center justify-content-center p-3 border-bottom gap-3">
                                 <ul className="col-8 nav nav-pills nav-fill">
                                     {
-                                        tabs.map((tab) => { 
+                                        tabs.map((tab) => {
                                             const Icon = tab.icon;
                                             return (
                                                 <li className="nav-item" key={tab.id}>
-                                                    <button 
+                                                    <button
                                                         type='button'
-                                                        className={`nav-link p-1 p-md-2 d-flex align-items-center justify-content-center gap-2 ${currTab === tab.id ? 'active' : ''}`} 
+                                                        className={`nav-link p-1 p-md-2 d-flex align-items-center justify-content-center gap-2 ${currTab === tab.id ? 'active' : ''}`}
                                                         aria-current="page"
                                                         onClick={() => setCurrTab(tab.id)}>
                                                             <Icon size={16} />
@@ -188,11 +172,11 @@ const EditRecipe = () => {
                                                     </button>
                                                 </li>
                                             );
-                                        }) 
+                                        })
                                     }
                                 </ul>
-                            </div> 
-                            {hasErrors && 
+                            </div>
+                            {hasErrors &&
                                 <div>
                                     <p>Whoops, Some feilds are invalid. Please check and put valid data to submit.</p>
                                 </div>
@@ -202,7 +186,7 @@ const EditRecipe = () => {
                                     <div className={`${currTab === Tab.UPLOAD ? 'upload-stage' : 'd-none'}`}>
                                         <div className="">
                                             <div className="upload-stage__secondary">
-                                                <UploadByUrlEditor />
+                                                {CRAWLER_ENABLED ? <UploadByUrlEditor /> : <p className="text-secondary">URL imports are unavailable. Upload recipe images or enter a recipe manually.</p>}
                                             </div>
                                             <div className="upload-stage__primary pt-5">
                                                 <ScanRecipeEditor currRecipe={currRecipe} updateData={updateData} isModalOpen={isModalOpen} setIsModalOpen={setIsModalOpen} />
@@ -220,17 +204,17 @@ const EditRecipe = () => {
                                     </div>
                                     <div className={`d-flex flex-wrap justify-content-between justify-content-md-start w-100 gap-2 ${currTab === Tab.IMAGES ? '': 'd-none'}`}>
                                         <ImageEditor currRecipe={currRecipe} control={control} updateData={updateData} register={register}/>
-                                    </div> 
+                                    </div>
                                 </main>
 
                                 {
-                                    currTab !== Tab.UPLOAD && 
+                                    currTab !== Tab.UPLOAD &&
                                     <footer className="p-4 px-md-5 border-top bg-white d-flex justify-content-between align-items-center mt-auto">
                                         <button className="btn btn-light text-secondary fw-medium px-4 py-2 rounded-3">
                                             Cancel
                                         </button>
                                         {currTab !== Tab.IMAGES ? (
-                                            <button 
+                                            <button
                                                 onClick={handleNext}
                                                 className="btn btn-dark d-flex align-items-center gap-2 px-4 py-2 rounded-3 shadow"
                                             >
@@ -246,9 +230,9 @@ const EditRecipe = () => {
                             </div>
                         </form>
                     </FormProvider>
-                </div> 
+                </div>
             </div>
-            
+
             {isModalOpen && (
                 <div className="recipe-confirmation-modal">
                     <div className="recipe-confirmation-modal-content">
@@ -263,7 +247,7 @@ const EditRecipe = () => {
                 </div>
             )}
         </>
-        
+
     )
 }
 

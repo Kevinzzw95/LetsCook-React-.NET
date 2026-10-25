@@ -21,9 +21,15 @@ type RecipeSearchApiResponse = Omit<RecipeSearchResponse, 'items'> & {
 
 const mapRecipeResponse = (recipe: RecipeApiResponse): recipeCommon => ({
     ...recipe,
-    cuisine: recipe.cuisine ?? recipe.cuisines ?? '',
+    id: recipe.id ?? '',
+    title: recipe.title ?? '',
+    servings: recipe.servings ?? 1,
+    sourceName: recipe.sourceName ?? '',
+    instructions: recipe.instructions ?? [],
+    extendedIngredients: recipe.extendedIngredients ?? [],
+    cuisine: recipe.cuisine ?? (Array.isArray(recipe.cuisines) ? recipe.cuisines[0] : recipe.cuisines) ?? '',
     diet: Array.isArray(recipe.diets) ? recipe.diets[0] ?? '' : recipe.diet ?? '',
-    type: recipe.type ?? recipe.dishType ?? (Array.isArray(recipe.dishTypes) ? recipe.dishTypes[0] : recipe.dishTypes) ?? '',
+    type: recipe.type ?? (Array.isArray(recipe.dishType) ? recipe.dishType[0] : recipe.dishType) ?? (Array.isArray(recipe.dishTypes) ? recipe.dishTypes[0] : recipe.dishTypes) ?? '',
     imageUrls: recipe.imageUrls ?? []
 });
 

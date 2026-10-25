@@ -1,21 +1,15 @@
+import { Bot, LoaderCircle, MessageSquareText, Send, Sparkles, X } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Bot, ChefHat, LoaderCircle, MessageSquareText, Send, Sparkles, X } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { AiStoredChatMessage } from '../../redux/api/aiApiSlice';
 import {
-    useChatMutation,
-    useCreateConversationMutation,
-    useLazyGetConversationMessagesQuery
+useChatMutation,
+useCreateConversationMutation,
+useLazyGetConversationMessagesQuery
 } from '../../redux/api/aiApiSlice';
 import { selectCurrentUser } from '../../redux/auth/authSlice';
 import './chatbot.scss';
 
-const starterPrompts = [
-    'Build me a high-protein dinner plan for 3 days',
-    'What can I cook with chicken, garlic, and rice?',
-    'Turn my saved recipes into a quick grocery list'
-];
 
 type ChatMessage = {
     id: string;

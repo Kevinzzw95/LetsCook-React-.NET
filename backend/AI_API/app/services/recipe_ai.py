@@ -2,6 +2,7 @@ import json
 
 from fastapi import HTTPException
 from google import genai
+from google.genai import types
 
 from app.core.config import get_settings
 from app.schemas.recipes import Recipe
@@ -12,7 +13,7 @@ def generate_recipe_json(query):
     if not settings.api_key_gemini:
         raise HTTPException(status_code=500, detail="API_KEY_GEMINI is not configured")
 
-    client = genai.Client(api_key=settings.api_key_gemini)
+    client = genai.Client(api_key=settings.api_key_gemini, http_options=types.HttpOptions(timeout=120_000))
     response = client.models.generate_content(
         model="gemini-2.5-flash",
         contents=query,

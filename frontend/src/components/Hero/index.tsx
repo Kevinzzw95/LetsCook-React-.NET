@@ -1,8 +1,4 @@
-import "./hero.scss"
-import React from "react";
-import { Link, Outlet, useLocation } from "react-router-dom";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faSearch } from "@fortawesome/free-solid-svg-icons";
+import "./hero.scss";
 
 const Hero = () => {
 

@@ -7,15 +7,9 @@ from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.schemas import CrawlerStartRequest, CrawlerTypeEnum, LoginTypeEnum, PlatformEnum
 from app.schemas.recipes import GenerateRecipeUrlPayload
-from app.services.crawler_manager import crawler_manager
+from app.core.config import get_settings
 from app.services.recipe_ai import generate_recipe_json
-from app.services.xiaohongshu import (
-    download_image,
-    extract_first_url,
-    is_xiaohongshu_url,
-    resolve_url_redirects,
-    upload_images_to_cloudinary,
-)
+
 
 
 router = APIRouter(tags=["recipes"])
@@ -62,8 +56,12 @@ def generate_recipe_images(images: List[UploadFile] = File(...)):
         raise HTTPException(status_code=400, detail="No images part in the request")
 
     pil_images = []
+    total_bytes = 0
     for image_file in images:
-        image_bytes = image_file.file.read()
+        image_bytes = image_file.file.read(20 * 1024 * 1024 + 1)
+        total_bytes += len(image_bytes)
+        if total_bytes > 20 * 1024 * 1024:
+            raise HTTPException(status_code=413, detail="Images exceed 20 MiB")
         if not image_bytes:
             continue
         pil_images.append(PIL.Image.open(BytesIO(image_bytes)))
@@ -76,6 +74,17 @@ def generate_recipe_images(images: List[UploadFile] = File(...)):
 
 @router.post("/generateRecipeUrl")
 async def generate_recipe_url(payload: GenerateRecipeUrlPayload):
+    if not get_settings().enable_crawler:
+        raise HTTPException(status_code=503, detail="URL imports are disabled; upload recipe images instead")
+    from app.services.crawler_manager import crawler_manager
+    from app.services.xiaohongshu import (
+        download_image,
+        extract_first_url,
+        is_xiaohongshu_url,
+        resolve_url_redirects,
+        upload_images_to_cloudinary,
+    )
+
     target_url = extract_first_url(payload.url)
     if not target_url:
         raise HTTPException(status_code=400, detail="No valid URL found")

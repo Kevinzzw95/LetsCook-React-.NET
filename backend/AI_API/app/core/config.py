@@ -56,12 +56,19 @@ class Settings(BaseModel):
     cloudinary_cloud_name: Optional[str] = None
     cloudinary_api_key: Optional[str] = None
     cloudinary_api_secret: Optional[str] = None
+    enable_crawler: bool = False
+    auto_create_schema: bool = True
+    request_timeout_seconds: int = 180
     cors_origins: list[str] = Field(default_factory=lambda: ["http://localhost:3000"])
 
 
 @lru_cache
 def get_settings() -> Settings:
     return Settings(
+        enable_crawler=_get_bool_env("ENABLE_CRAWLER"),
+        auto_create_schema=_get_bool_env("AUTO_CREATE_SCHEMA", True),
+        request_timeout_seconds=int(os.environ.get("REQUEST_TIMEOUT_SECONDS", "180")),
+        cors_origins=_get_list_env("CORS_ORIGINS") or ["http://localhost:3000"],
         api_key_gemini=os.environ.get("API_KEY_GEMINI"),
         openai_api_key=os.environ.get("OPENAI_API_KEY"),
         openai_model=os.environ.get("OPENAI_MODEL", "gpt-4.1-mini"),

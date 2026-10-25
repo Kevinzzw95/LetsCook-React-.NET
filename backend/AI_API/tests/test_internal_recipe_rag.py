@@ -14,6 +14,7 @@ def _settings(**overrides):
     values = {
         "recipe_database_url": "postgresql://example/recipes",
         "recipe_search_limit": 5,
+        "auto_create_schema": True,
         "recipe_vector_collection": "letscook_recipes",
         "openai_api_key": "test-key",
         "openai_embedding_model": "text-embedding-3-small",
@@ -119,7 +120,7 @@ def test_vector_store_uses_openai_embeddings_and_pgvector(monkeypatch):
 
     monkeypatch.setattr(recipe_db, "get_settings", _settings)
     monkeypatch.setattr(recipe_db, "OpenAIEmbeddings", FakeEmbeddings)
-    monkeypatch.setattr(recipe_db, "PGVector", FakePGVector)
+    monkeypatch.setattr(recipe_db, "PreparedPGVector", FakePGVector)
 
     recipe_db._build_vector_store()
 

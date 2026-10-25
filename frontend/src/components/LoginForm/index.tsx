@@ -1,13 +1,13 @@
 // src/LoginForm.js
-import React, { useEffect, useState } from 'react';
-import './login-form.scss';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ArrowRight, Lock, Mail } from 'lucide-react';
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
-import { useLoginMutation } from '../../redux/auth/authApiSlice';
-import { postAuth } from '../../types/user';
 import { useDispatch } from 'react-redux';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLoginMutation } from '../../redux/auth/authApiSlice';
 import { setCredentials } from '../../redux/auth/authSlice';
-import { ArrowRight, Mail, Lock } from 'lucide-react';
+import { postAuth } from '../../types/user';
+import './login-form.scss';
 
 const LoginForm = () => {
 
@@ -17,9 +17,9 @@ const LoginForm = () => {
 	const {
 		register,
 		handleSubmit,
-		formState: { isSubmitting, errors, isValid },
-		setError,
-		getValues,
+		formState: { errors },
+
+
 		reset
 	} = useForm<postAuth>({
 		mode: "onTouched",

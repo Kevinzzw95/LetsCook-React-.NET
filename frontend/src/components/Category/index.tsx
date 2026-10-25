@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import './category.scss'
-import { Link, Outlet, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { CATEGORIES } from "../../constants";
+import './category.scss';
 
 const Category = () => {
 

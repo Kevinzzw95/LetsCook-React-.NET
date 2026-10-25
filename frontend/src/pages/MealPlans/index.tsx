@@ -1,7 +1,7 @@
+import { CalendarDays, Check, ChevronLeft, ChevronRight, Clock3, ShoppingCart, Soup, Trash2, Users } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import { CalendarDays, Check, ChevronLeft, ChevronRight, Clock3, Plus, ShoppingCart, Soup, Trash2, Users } from 'lucide-react';
-import { MealPlanEntry, MealPlanRecipeOption, MealType } from '../../types/mealPlan';
 import { useAddMealPlanDaysToShoppingListMutation, useAddRecipeIngredientsToShoppingListMutation, useDeleteMealPlanEntryMutation, useGetMealPlanEntriesQuery, useGetRecipesQuery, useUpsertMealPlanEntryMutation } from '../../redux/recipe/recipeApiSlice';
+import { MealPlanEntry, MealPlanRecipeOption, MealType } from '../../types/mealPlan';
 import './meal-plans.scss';
 
 const mealTypes: MealType[] = ['breakfast', 'lunch', 'dinner'];
@@ -46,8 +46,8 @@ const MealPlans = () => {
         year: currentMonth.getFullYear(),
         month: currentMonth.getMonth() + 1
     });
-    const { data: recipes = [], isLoading: isLoadingRecipes } = useGetRecipesQuery();
-    const [upsertMealPlanEntry, { isLoading: isSaving }] = useUpsertMealPlanEntryMutation();
+    const { data: recipes = [] } = useGetRecipesQuery();
+    const [upsertMealPlanEntry] = useUpsertMealPlanEntryMutation();
     const [deleteMealPlanEntry, { isLoading: isDeleting }] = useDeleteMealPlanEntryMutation();
     const [addMealPlanDaysToShoppingList, { isLoading: isAddingToShoppingList }] = useAddMealPlanDaysToShoppingListMutation();
     const [addRecipeIngredientsToShoppingList, { isLoading: isAddingRecipeIngredients }] = useAddRecipeIngredientsToShoppingListMutation();

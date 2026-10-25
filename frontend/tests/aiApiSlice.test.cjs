@@ -23,6 +23,7 @@ function chatEndpoint() {
             if (name === './apiSlice') return { apiSlice: { util: {
                 invalidateTags: tags => ({ type: 'invalidateMealPlan', payload: tags })
             } } };
+            if (name === '../../config/environment') return { AI_API_BASE_URL: '/ai/' };
             if (name === './baseQueryWithReauth') return { createBaseQueryWithReauth: () => null };
             throw new Error(`Unexpected import: ${name}`);
         }

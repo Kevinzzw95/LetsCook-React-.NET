@@ -1,4 +1,4 @@
-import { object, number, string, array, ObjectSchema } from 'yup';
+import { object, number, string, array, mixed, ObjectSchema } from 'yup';
 import { RecipeDraft } from "../../types/recipe";
 
 export const validationSchema: ObjectSchema<RecipeDraft> = object({
@@ -26,7 +26,10 @@ export const validationSchema: ObjectSchema<RecipeDraft> = object({
 			unit: string().transform((value) => value ?? '').optional().default('')
 		}),
 	).required().min(1),
-	images: array().optional()
+	prepTime: number().optional(),
+	ingredientsEn: array().of(mixed<RecipeDraft["ingredientsEn"][number]>().defined()).default([]),
+	imageInfo: mixed<Map<string, string>>().optional(),
+	images: array().of(mixed<File | string>().defined()).optional()
 	/*file: yup.mixed().when("pictureUrl", {
 		is: (value: string) => !value,
 		then: (schema) => schema.required("Please provide an image"),

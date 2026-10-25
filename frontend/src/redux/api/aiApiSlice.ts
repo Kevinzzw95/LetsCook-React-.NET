@@ -1,3 +1,4 @@
+import { AI_API_BASE_URL } from '../../config/environment';
 import { createApi } from '@reduxjs/toolkit/query/react';
 import { apiSlice } from './apiSlice';
 import { createBaseQueryWithReauth } from './baseQueryWithReauth';
@@ -44,7 +45,7 @@ export type AiConversationMessages = {
 
 export const aiApiSlice = createApi({
     reducerPath: 'aiApi',
-    baseQuery: createBaseQueryWithReauth('http://localhost:8088/'),
+    baseQuery: createBaseQueryWithReauth(AI_API_BASE_URL),
     endpoints: builder => ({
         createConversation: builder.mutation<AiConversation, void>({
             query: () => ({

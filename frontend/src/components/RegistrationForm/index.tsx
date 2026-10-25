@@ -1,9 +1,8 @@
-import React, { useState } from 'react';
-import './registration-form.scss';
-import { Link } from 'react-router-dom';
+import { ArrowRight, Lock, Mail, UserRoundPen } from 'lucide-react';
 import { FieldValues, useForm } from 'react-hook-form';
+import { Link } from 'react-router-dom';
 import { useUserRegisterMutation } from '../../redux/auth/authApiSlice';
-import { Mail, Lock, ArrowRight, UserRoundPen } from 'lucide-react';
+import './registration-form.scss';
 
 type FormData = {
   email: string
@@ -15,8 +14,8 @@ const RegistrationForm = () => {
     const {
         register,
         handleSubmit,
-        formState: { isSubmitting, errors, isValid },
-        setError,
+        formState: { errors },
+
     } = useForm<FormData>({
         mode: "onTouched",
     });

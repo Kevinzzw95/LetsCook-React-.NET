@@ -34,7 +34,7 @@ export class RecipeController {
 	@Get(':id')
 	get(@Param('id', ParseIntPipe) id: number) { return this.recipes.get(id); }
 
-	@UseGuards(JwtAuthGuard) @Post() @UseInterceptors(FilesInterceptor('images'))
+	@UseGuards(JwtAuthGuard) @Post() @UseInterceptors(FilesInterceptor('images', 20, { limits: { fileSize: 20 * 1024 * 1024, fieldSize: 20 * 1024 * 1024 } }))
 	async create(
 		@AuthUser() user: AuthenticatedUser, @Body() form: RecipeForm,
 		@UploadedFiles() files: Express.Multer.File[] = [], @Res({ passthrough: true }) response: Response,
@@ -44,7 +44,7 @@ export class RecipeController {
 		return id;
 	}
 
-	@UseGuards(JwtAuthGuard) @Put(':id') @UseInterceptors(FilesInterceptor('images'))
+	@UseGuards(JwtAuthGuard) @Put(':id') @UseInterceptors(FilesInterceptor('images', 20, { limits: { fileSize: 20 * 1024 * 1024, fieldSize: 20 * 1024 * 1024 } }))
 	update(
 		@AuthUser() user: AuthenticatedUser, @Param('id', ParseIntPipe) id: number,
 		@Body() form: RecipeForm, @UploadedFiles() files: Express.Multer.File[] = [],

@@ -1,3 +1,4 @@
+import { HealthController } from './health.controller';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { AccountModule } from './account/account.module';
@@ -13,6 +14,6 @@ import { RedisModule } from './redis/redis.module';
     ConfigModule.forRoot({ isGlobal: true }),
     PrismaModule, RedisModule, AccountModule, RecipeModule, ShoppingListModule, MealPlanModule,
   ],
-  controllers: [BaseApiController],
+  controllers: [BaseApiController, HealthController],
 })
 export class AppModule {}

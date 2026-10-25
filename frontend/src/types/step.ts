@@ -1,4 +1,3 @@
-import { equipment } from "./equipment";
 
 export interface Step {
     id?: string,

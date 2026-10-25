@@ -1,3 +1,4 @@
+import asyncio
 from dataclasses import dataclass
 
 from fastapi import HTTPException
@@ -93,8 +94,10 @@ async def run_chat_graph(
     }
 
     try:
-        result = await graph.ainvoke(state)
+        result = await asyncio.wait_for(graph.ainvoke(state), timeout=settings.request_timeout_seconds)
         reply = result["messages"][-1].content
+    except TimeoutError as exc:
+        raise HTTPException(status_code=504, detail="Request timed out; check your meal plan before retrying a save") from exc
     except HTTPException:
         raise
     except APIError as exc:

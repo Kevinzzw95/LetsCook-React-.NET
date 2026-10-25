@@ -37,12 +37,15 @@ def create_app() -> FastAPI:
     )
 
     app.include_router(api_router)
-    app.add_api_route("/", serve_frontend, methods=["GET"])
     app.add_api_route("/api/health", health_check, methods=["GET"])
-    app.add_api_route("/api/env/check", check_environment, methods=["GET"])
-    app.add_api_route("/api/config/platforms", get_platforms, methods=["GET"])
-    app.add_api_route("/api/config/options", get_config_options, methods=["GET"])
-    _mount_webui_static(app)
+    app.add_api_route("/api/ready", readiness_check, methods=["GET"])
+    if settings.enable_crawler:
+        app.add_api_route("/", serve_frontend, methods=["GET"])
+        app.add_api_route("/api/env/check", check_environment, methods=["GET"])
+        app.add_api_route("/api/config/platforms", get_platforms, methods=["GET"])
+        app.add_api_route("/api/config/options", get_config_options, methods=["GET"])
+        _mount_webui_static(app)
+
 
     return app
 
@@ -70,6 +73,23 @@ async def serve_frontend():
         "docs": "/docs",
         "note": "WebUI not found, please build it first: cd webui && npm run build",
     }
+
+
+async def readiness_check():
+    import asyncpg
+    from fastapi import HTTPException
+    from app.services.chat_history import _normalize_dsn
+    settings = get_settings()
+    try:
+        async with asyncio.timeout(5):
+            connection = await asyncpg.connect(_normalize_dsn(settings.recipe_database_url or ""))
+            try:
+                await connection.fetchval('SELECT 1 FROM "Recipes" LIMIT 1')
+            finally:
+                await connection.close()
+    except Exception:
+        raise HTTPException(status_code=503, detail="Database unavailable or not initialized")
+    return {"status": "ready"}
 
 
 async def health_check():

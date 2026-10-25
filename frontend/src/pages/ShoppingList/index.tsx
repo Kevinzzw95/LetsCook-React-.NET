@@ -1,20 +1,19 @@
 
+import { Filter, Plus, ShoppingBag, ShoppingCart } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { Plus, Trash2, MapPin, Check, Circle, ShoppingCart, ShoppingBag, Pencil, Filter } from 'lucide-react';
-import { v4 as uuidv4 } from 'uuid';
-import { ShoppingItem } from '../../types/ingredient';
-import './shopping-list.scss';
 import ShoppingListCard from '../../components/ShoppingListCard';
 import { useGetShoppingListQuery } from '../../redux/recipe/recipeApiSlice';
+import { ShoppingItem } from '../../types/ingredient';
+import './shopping-list.scss';
 
 const ShoppingList = () => {
     const [activeTab, setActiveTab] = useState<'to-buy' | 'bought'>('to-buy');
     const [filterStore, setFilterStore] = useState('All');
-    const [items, setItems] = useState<ShoppingItem[]>();
-    const { data: shoppingList, error, isLoading, isFetching, refetch } = useGetShoppingListQuery();
+    const [items, setItems] = useState<ShoppingItem[]>([]);
+    const { data: shoppingList } = useGetShoppingListQuery();
     
     useEffect(() => {
-        setItems(shoppingList?.items);
+        setItems(shoppingList?.items ?? []);
     }, [shoppingList]);
 
     // Get unique stores from items for the filter dropdown
@@ -31,13 +30,6 @@ const ShoppingList = () => {
     const addItem = (e: React.FormEvent) => {
         e.preventDefault();
         if (!newItemName.trim()) return;
-        const newItem: ShoppingItem = {
-            name: newItemName,
-            amount: '1',
-            store: '',
-            isBought: false,
-            unit: "g"
-        };
         setNewItemName('');
         setActiveTab('to-buy');
     };

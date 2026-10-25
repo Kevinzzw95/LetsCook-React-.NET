@@ -1,11 +1,9 @@
-import { faCirclePlus, faXmark } from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import './image-editor.scss';
+import { Upload, X } from "lucide-react";
 import { useEffect } from "react";
 import { useDropzone } from 'react-dropzone';
+import { Control, UseFormRegister, useFormContext } from "react-hook-form";
 import { RecipeDraft } from "../../../types/recipe";
-import { Control, useFormContext, UseFormRegister } from "react-hook-form";
-import { Upload, X } from "lucide-react";
+import './image-editor.scss';
 
 type Props = {
     currRecipe: RecipeDraft;
@@ -14,8 +12,8 @@ type Props = {
     register: UseFormRegister<RecipeDraft>;
 }
 
-const ImageEditor = ({currRecipe, updateData, control, register}: Props) => {
-    const { watch, reset, setValue, formState: { errors }} = useFormContext();
+const ImageEditor = ({currRecipe, updateData, register}: Props) => {
+    const { watch, reset, setValue} = useFormContext();
     const watchImages = watch("images", []);
 
     const handleRemoveImage = (targetIndex: number) => {

@@ -2,6 +2,12 @@
 Pytest configuration and shared fixtures
 """
 
+import os
+
+# Unit-test prompts and fixtures must never be sent to external tracing services.
+os.environ["LANGSMITH_TRACING"] = "false"
+os.environ["LANGCHAIN_TRACING_V2"] = "false"
+
 import pytest
 import sys
 from pathlib import Path

@@ -28,7 +28,7 @@ const ShoppingListCard = ({item, updateItem, deleteItem}: Props) => {
         }).then(() => {
             updateItem(item.itemId, { amount: quantity, unit: unit, store: store });
             setIsEditMode(false);
-        }).catch(error => {
+        }).catch(() => {
 
         });
     }
@@ -51,7 +51,7 @@ const ShoppingListCard = ({item, updateItem, deleteItem}: Props) => {
             <div className="d-flex align-items-center gap-2 gap-md-3 flex-grow-1">
                 <button 
                     onClick={() => toggleBought(item)}
-                    className={`bought-button btn p-0 rounded-circle d-flex align-items-center justify-content-center border-2 transition-all flex-shrink-0 ${item.bought ? 'btn-success border-success' : 'btn-outline-secondary border-secondary-subtle'}`}
+                    className={`bought-button btn p-0 rounded-circle d-flex align-items-center justify-content-center border-2 transition-all flex-shrink-0 ${item.isBought ? 'btn-success border-success' : 'btn-outline-secondary border-secondary-subtle'}`}
                 >
                     {item.isBought ? <Check size={14} /> : <Circle size={14} className="text-transparent" />}
                 </button>

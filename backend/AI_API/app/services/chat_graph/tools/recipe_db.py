@@ -210,6 +210,22 @@ def _asyncpg_connection_string(database_url: str) -> str:
     )
 
 
+class PreparedPGVector(PGVector):
+    """Production schemas are provisioned by the migration service, not API requests."""
+
+    async def acreate_tables_if_not_exists(self) -> None:
+        if get_settings().auto_create_schema:
+            await super().acreate_tables_if_not_exists()
+
+    async def acreate_collection(self) -> None:
+        if get_settings().auto_create_schema:
+            await super().acreate_collection()
+        else:
+            async with self._make_async_session() as session:
+                if await self.CollectionStore.aget_by_name(session, self.collection_name) is None:
+                    raise RuntimeError("Recipe vector collection is missing; run database migrations")
+
+
 @lru_cache(maxsize=1)
 def _build_vector_store() -> PGVector:
     settings = get_settings()
@@ -223,13 +239,13 @@ def _build_vector_store() -> PGVector:
         dimensions=settings.openai_embedding_dimensions,
         api_key=settings.openai_api_key,
     )
-    return PGVector(
+    return PreparedPGVector(
         embeddings=embeddings,
         connection=_pgvector_connection_string(settings.recipe_database_url),
         collection_name=settings.recipe_vector_collection,
         embedding_length=settings.openai_embedding_dimensions,
         use_jsonb=True,
-        create_extension=True,
+        create_extension=settings.auto_create_schema,
         async_mode=True,
     )
 
@@ -260,7 +276,8 @@ async def load_user_recipe_documents(user_id: str) -> list[Document]:
 
 
 async def _read_index_hashes(connection: asyncpg.Connection, collection_name: str) -> dict[str, str]:
-    await connection.execute(_CREATE_SYNC_STATE_SQL)
+    if get_settings().auto_create_schema:
+        await connection.execute(_CREATE_SYNC_STATE_SQL)
     value = await connection.fetchval(
         'SELECT "ContentHashes" FROM "RecipeEmbeddingSyncState" WHERE "CollectionName" = $1',
         collection_name,
@@ -289,6 +306,7 @@ async def sync_recipe_embeddings(vector_store: PGVector) -> None:
             timeout=10,
         )
         try:
+            await connection.execute("SELECT pg_advisory_lock(hashtext($1))", "letscook-embedding-sync")
             await _ensure_pgvector_available(connection)
             documents = await _load_recipe_documents(connection)
             previous_hashes = await _read_index_hashes(connection, settings.recipe_vector_collection)

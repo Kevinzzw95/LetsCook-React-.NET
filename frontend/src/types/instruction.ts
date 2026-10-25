@@ -1,6 +1,6 @@
-import { step } from "./step";
+import { Step } from "./step";
 
 export interface instruction {
     "name": string,
-    "steps": step[]
+    "steps": Step[]
 }

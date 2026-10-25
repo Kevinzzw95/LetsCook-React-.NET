@@ -4,7 +4,7 @@ import type { RootState } from '../store/store';
 import { logOut, setCredentials } from '../auth/authSlice';
 import type { AuthResponse } from '../../types/user';
 
-const MAIN_API_BASE_URL = 'http://localhost:5001/api/';
+import { MAIN_API_BASE_URL } from '../../config/environment';
 
 const prepareHeaders = (headers: Headers, { getState }: { getState: () => unknown }) => {
     const token = (getState() as RootState).auth.token;

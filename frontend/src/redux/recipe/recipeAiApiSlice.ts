@@ -6,7 +6,7 @@ export const recipeAiApiSlice = aiApiSlice.injectEndpoints({
         uploadImages: builder.mutation<RecipeDraft, File[]>({
             query: (files) => {
                 const formData = new FormData();
-                files.forEach((file, index) => {
+                files.forEach((file) => {
                     formData.append('images', file);
                 });
         

@@ -27,6 +27,6 @@ export type RootState = ReturnType<typeof store['getState']>
 
 export type AppDispatch = typeof store['dispatch']
 
-if (process.env.NODE_ENV !== 'production') {
-  window.store = store;
+if (import.meta.env.DEV) {
+  (window as Window & { store?: typeof store }).store = store;
 }

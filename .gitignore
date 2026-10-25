@@ -7,3 +7,7 @@ agents.md
 .codex/
 .claude/
 .cursor/
+
+# Local container secrets and database exports
+.env.docker
+*.dump
